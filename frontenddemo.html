@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUIZORA</title>
+<style>
+  :root{
+    --bg: #0E1030;
+    --violet: #7C4DFF;
+    --violet-soft: #A78BFA;
+    --mint: #00E5A0;
+    --amber: #FFC93C;
+    --ink: #FFFFFF;
+    --muted: #9B96C9;
+    --card-bg: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  }
+
+  /* ============ LOGO (shared: hero during load, dot in corner after) ============ */
+  .logo-wrap {
+    width: 190px;
+    height: 190px;
+    filter: drop-shadow(0 0 26px rgba(124,77,255,0.45));
+  }
+
+  svg { width: 100%; height: 100%; overflow: visible; display: block; }
+
+  .ring {
+    fill: none;
+    stroke: url(#ringGradient);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 1.3s cubic-bezier(.65,0,.35,1) forwards;
+  }
+
+  .check {
+    fill: none;
+    stroke: var(--mint);
+    stroke-width: 11;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 0.5s ease-out forwards;
+    animation-delay: 1.05s;
+    filter: drop-shadow(0 0 8px rgba(0,229,160,0.65));
+  }
+
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  .spark { opacity: 0; transform-origin: 178px 118px; }
+  .spark line { stroke: var(--amber); stroke-width: 3; stroke-linecap: round; }
+  .spark { animation: spark-pop 0.5s ease-out forwards; animation-delay: 1.55s; }
+  @keyframes spark-pop {
+    0%   { opacity: 0; transform: scale(0.3); }
+    50%  { opacity: 1; transform: scale(1.15); }
+    100% { opacity: 0; transform: scale(1.5); }
+  }
+
+  .logo-wrap.formed .ring {
+    animation: draw 1.3s cubic-bezier(.65,0,.35,1) forwards, ring-pulse 1.8s ease-in-out 1.7s infinite;
+  }
+  @keyframes ring-pulse {
+    0%, 100% { filter: none; }
+    50% { filter: drop-shadow(0 0 12px rgba(124,77,255,0.8)); }
+  }
+
+  .logo-wrap.docking {
+    transition: top 0.85s cubic-bezier(.65,0,.35,1), left 0.85s cubic-bezier(.65,0,.35,1),
+                width 0.85s cubic-bezier(.65,0,.35,1), height 0.85s cubic-bezier(.65,0,.35,1);
+  }
+
+  /* ============ INTRO (loading) ============ */
+  .intro {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 38%, rgba(124,77,255,0.28), transparent 55%),
+      radial-gradient(circle at 65% 60%, rgba(0,229,160,0.10), transparent 50%),
+      var(--bg);
+    z-index: 10;
+    transition: opacity 0.7s ease, visibility 0.7s ease;
+  }
+  .intro.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .wordmark {
+    margin-top: 30px;
+    font-weight: 800;
+    font-size: 30px;
+    letter-spacing: 5px;
+    color: var(--ink);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: reveal 0.7s ease forwards;
+    animation-delay: 1.65s;
+  }
+  .wordmark span { color: var(--mint); }
+
+  .tagline {
+    margin-top: 8px;
+    font-size: 13px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0;
+    transform: translateY(8px);
+    animation: reveal 0.7s ease forwards;
+    animation-delay: 1.85s;
+  }
+
+  @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+
+  .loader { margin-top: 44px; width: 340px; opacity: 0; animation: reveal 0.6s ease forwards; animation-delay: 2.0s; }
+  .track { width: 100%; height: 8px; border-radius: 8px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .fill {
+    height: 100%; width: 0%; border-radius: 8px;
+    background: linear-gradient(90deg, var(--violet), var(--mint) 70%, var(--amber));
+    box-shadow: 0 0 12px rgba(124,77,255,0.5);
+    transition: width 0.15s linear;
+  }
+  .pct-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; font-size: 12px; letter-spacing: 1.5px; color: var(--muted); }
+  #pctNum { color: var(--violet-soft); font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 700; }
+
+  .quote { margin-top: 18px; min-height: 20px; text-align: center; font-size: 13px; font-style: italic; color: var(--muted); }
+  .quote span { display: inline-block; animation: quote-fade 0.4s ease; }
+  @keyframes quote-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ============ CORNER BRAND (after load) ============ */
+  .corner-label {
+    position: fixed;
+    top: 34px;
+    left: 96px;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: var(--ink);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 20;
+  }
+  .corner-label span { color: var(--mint); }
+  .corner-label.show { opacity: 1; }
+
+  /* ============ ROLE SELECT PAGE ============ */
+  .page {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s;
+    z-index: 1;
+  }
+  .page.show { opacity: 1; transform: translateY(0); }
+
+  .page h1 { font-size: 38px; letter-spacing: 0.3px; font-weight: 700; color: var(--ink); }
+  .page .eyebrow {
+    font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--violet-soft); margin-bottom: 12px;
+  }
+  .page .sub { margin-top: 12px; font-size: 17px; color: var(--muted); letter-spacing: 0.2px; }
+
+  .role-options { margin-top: 50px; display: flex; gap: 28px; }
+
+  .role-card {
+    all: unset;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 232px;
+    padding: 42px 28px 34px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+  }
+  .role-card .avatar { width: 92px; height: 92px; }
+  .role-card .divider { width: 36px; height: 1px; background: var(--card-border); margin: 2px 0 6px; }
+  .role-card .label { font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: 0.3px; }
+  .role-card .hint { font-size: 13px; color: var(--muted); letter-spacing: 0.3px; }
+
+  .role-card:hover { transform: translateY(-5px); }
+  .role-card.professor:hover { border-color: var(--violet); box-shadow: 0 16px 32px rgba(124,77,255,0.22); }
+  .role-card.student:hover   { border-color: var(--mint);   box-shadow: 0 16px 32px rgba(0,229,160,0.22); }
+
+  .role-card.selected.professor { border-color: var(--violet); box-shadow: 0 0 0 2px rgba(124,77,255,0.35), 0 16px 32px rgba(124,77,255,0.28); }
+  .role-card.selected.student   { border-color: var(--mint);   box-shadow: 0 0 0 2px rgba(0,229,160,0.35), 0 16px 32px rgba(0,229,160,0.28); }
+  .role-options.has-selection .role-card:not(.selected) { opacity: 0.45; }
+</style>
+</head>
+<body>
+
+  <div class="corner-label" id="cornerLabel">QUIZ<span>ORA</span></div>
+
+  <div class="intro" id="intro">
+    <!-- Logo lives above the wordmark during load, then docks to the top-left corner -->
+    <div class="logo-wrap" id="logoWrap">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7C4DFF"/>
+            <stop offset="100%" stop-color="#A78BFA"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Q ring: open arc with a gap, like a real letterform, so the tail reads as the Q's leg -->
+        <path class="ring" pathLength="1" d="M129.6,163.4 A70,70 0 1,1 169.7,106.1"/>
+
+        <!-- Q tail, shaped as a checkmark exiting the gap (correct-answer motif) -->
+        <polyline class="check" pathLength="1" points="132,148 148,166 178,118"/>
+
+        <!-- spark burst at the checkmark tip -->
+        <g class="spark">
+          <line x1="178" y1="100" x2="178" y2="88"/>
+          <line x1="196" y1="118" x2="208" y2="118"/>
+          <line x1="192" y1="104" x2="200" y2="96"/>
+          <line x1="192" y1="132" x2="200" y2="140"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="wordmark">QUIZ<span>ORA</span></div>
+    <div class="tagline">Assess Smarter. Learn Faster.</div>
+
+    <div class="loader">
+      <div class="track"><div class="fill" id="fillBar"></div></div>
+      <div class="pct-row">
+        <span>PREPARING YOUR CLASSROOM</span>
+        <span id="pctNum">0%</span>
+      </div>
+      <div class="quote" id="quote"><span id="quoteText">Every question sharpens the mind.</span></div>
+    </div>
+  </div>
+
+  <div class="page" id="page">
+    <div class="eyebrow">Get started</div>
+    <h1>Continue as a Student or Professor</h1>
+    <div class="sub">Select your role to set up your account</div>
+    <div class="role-options" id="roleOptions">
+
+      <button class="role-card student" data-role="student">
+        <svg class="avatar" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="50" fill="#00E5A0"/>
+          <circle cx="50" cy="38" r="15" fill="#fff"/>
+          <path d="M18,96 C18,68 34,58 50,58 C66,58 82,68 82,96 Z" fill="#fff"/>
+          <path d="M38,58 Q50,72 62,58" stroke="#00E5A0" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M30,60 L70,96" stroke="#00E5A0" stroke-width="5" stroke-linecap="round"/>
+          <rect x="61" y="81" width="13" height="11" rx="2" fill="#00E5A0"/>
+        </svg>
+        <div class="divider"></div>
+        <div class="label">Student</div>
+        <div class="hint">Take assigned quizzes</div>
+      </button>
+
+      <button class="role-card professor" data-role="professor">
+        <svg class="avatar" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="50" fill="#7C4DFF"/>
+          <circle cx="50" cy="38" r="15" fill="#fff"/>
+          <path d="M18,96 C18,68 34,58 50,58 C66,58 82,68 82,96 Z" fill="#fff"/>
+          <path d="M50,58 L38,72 L44,96" stroke="#7C4DFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M50,58 L62,72 L56,96" stroke="#7C4DFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M50,64 L46,80 L50,90 L54,80 Z" fill="#FFC93C"/>
+        </svg>
+        <div class="divider"></div>
+        <div class="label">Professor</div>
+        <div class="hint">Create and grade quizzes</div>
+      </button>
+
+    </div>
+  </div>
+
+<script>
+  const logoWrap   = document.getElementById('logoWrap');
+  const intro      = document.getElementById('intro');
+  const fillBar    = document.getElementById('fillBar');
+  const pctNum     = document.getElementById('pctNum');
+  const quoteText  = document.getElementById('quoteText');
+  const cornerLabel= document.getElementById('cornerLabel');
+  const page       = document.getElementById('page');
+  const roleOptions= document.getElementById('roleOptions');
+
+  // quiz-themed quotes rotated during loading
+  const quotes = [
+    "Every question sharpens the mind.",
+    "Great answers begin with great questions.",
+    "Test knowledge. Build confidence.",
+    "Curiosity is the first correct answer."
+  ];
+  let quoteIndex = 0;
+  const quoteInterval = setInterval(() => {
+    quoteIndex = (quoteIndex + 1) % quotes.length;
+    quoteText.style.animation = 'none';
+    quoteText.offsetHeight;
+    quoteText.style.animation = 'quote-fade 0.4s ease';
+    quoteText.textContent = quotes[quoteIndex];
+  }, 1000);
+
+  setTimeout(() => logoWrap.classList.add('formed'), 1600);
+
+  const startDelay = 2000;
+  const duration = 4200;
+  let startTime = null;
+
+  function tick(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const elapsed = timestamp - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const pct = Math.round(progress * 100);
+    fillBar.style.width = pct + '%';
+    pctNum.textContent = pct + '%';
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      clearInterval(quoteInterval);
+      setTimeout(dockLogoAndReveal, 350);
+    }
+  }
+  setTimeout(() => requestAnimationFrame(tick), startDelay);
+
+  function dockLogoAndReveal() {
+    // freeze the logo at its current on-screen position...
+    const rect = logoWrap.getBoundingClientRect();
+    logoWrap.style.position = 'fixed';
+    logoWrap.style.top = rect.top + 'px';
+    logoWrap.style.left = rect.left + 'px';
+    logoWrap.style.width = rect.width + 'px';
+    logoWrap.style.height = rect.height + 'px';
+    logoWrap.style.zIndex = 20;
+
+    // ...then move it out of .intro so intro's fade-out doesn't fade the logo too
+    document.body.appendChild(logoWrap);
+    logoWrap.offsetHeight; // force reflow
+
+    logoWrap.classList.add('docking');
+    requestAnimationFrame(() => {
+      logoWrap.style.top = '20px';
+      logoWrap.style.left = '20px';
+      logoWrap.style.width = '64px';
+      logoWrap.style.height = '64px';
+    });
+
+    intro.classList.add('hide');
+    page.classList.add('show');
+
+    setTimeout(() => cornerLabel.classList.add('show'), 700);
+  }
+
+  roleOptions.addEventListener('click', (e) => {
+    const card = e.target.closest('.role-card');
+    if (!card) return;
+    roleOptions.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    roleOptions.classList.add('has-selection');
+    // hook up navigation to the actual student/professor flow here
+    // console.log('role selected:', card.dataset.role);
+  });
+</script>
+
+</body>
+</html>
