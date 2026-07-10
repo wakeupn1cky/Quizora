@@ -42,31 +42,44 @@
   .ring {
     fill: none;
     stroke: url(#ringGradient);
-    stroke-width: 10;
+    stroke-width: 13;
     stroke-linecap: round;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
     animation: draw 1.3s cubic-bezier(.65,0,.35,1) forwards;
   }
 
+  .puzzle {
+    fill: none;
+    stroke: var(--violet-soft);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0.9;
+    animation: draw 0.7s cubic-bezier(.45,0,.4,1) forwards;
+    animation-delay: 1.1s;
+  }
+
   .check {
     fill: none;
     stroke: var(--mint);
-    stroke-width: 11;
+    stroke-width: 13;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
     animation: draw 0.5s ease-out forwards;
-    animation-delay: 1.05s;
+    animation-delay: 1.85s;
     filter: drop-shadow(0 0 8px rgba(0,229,160,0.65));
   }
 
   @keyframes draw { to { stroke-dashoffset: 0; } }
 
-  .spark { opacity: 0; transform-origin: 178px 118px; }
+  .spark { opacity: 0; transform-origin: 190px 120px; }
   .spark line { stroke: var(--amber); stroke-width: 3; stroke-linecap: round; }
-  .spark { animation: spark-pop 0.5s ease-out forwards; animation-delay: 1.55s; }
+  .spark { animation: spark-pop 0.5s ease-out forwards; animation-delay: 2.35s; }
   @keyframes spark-pop {
     0%   { opacity: 0; transform: scale(0.3); }
     50%  { opacity: 1; transform: scale(1.15); }
@@ -74,7 +87,7 @@
   }
 
   .logo-wrap.formed .ring {
-    animation: draw 1.3s cubic-bezier(.65,0,.35,1) forwards, ring-pulse 1.8s ease-in-out 1.7s infinite;
+    animation: draw 1.3s cubic-bezier(.65,0,.35,1) forwards, ring-pulse 1.8s ease-in-out 2.4s infinite;
   }
   @keyframes ring-pulse {
     0%, 100% { filter: none; }
@@ -112,7 +125,7 @@
     opacity: 0;
     transform: translateY(10px);
     animation: reveal 0.7s ease forwards;
-    animation-delay: 1.65s;
+    animation-delay: 2.4s;
   }
   .wordmark span { color: var(--mint); }
 
@@ -125,12 +138,12 @@
     opacity: 0;
     transform: translateY(8px);
     animation: reveal 0.7s ease forwards;
-    animation-delay: 1.85s;
+    animation-delay: 2.6s;
   }
 
   @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
 
-  .loader { margin-top: 44px; width: 340px; opacity: 0; animation: reveal 0.6s ease forwards; animation-delay: 2.0s; }
+  .loader { margin-top: 44px; width: 340px; opacity: 0; animation: reveal 0.6s ease forwards; animation-delay: 2.75s; }
   .track { width: 100%; height: 8px; border-radius: 8px; background: rgba(255,255,255,0.08); overflow: hidden; }
   .fill {
     height: 100%; width: 0%; border-radius: 8px;
@@ -235,15 +248,20 @@
         <!-- Q ring: open arc with a gap, like a real letterform, so the tail reads as the Q's leg -->
         <path class="ring" pathLength="1" d="M129.6,163.4 A70,70 0 1,1 169.7,106.1"/>
 
-        <!-- Q tail, shaped as a checkmark exiting the gap (correct-answer motif) -->
-        <polyline class="check" pathLength="1" points="132,148 148,166 178,118"/>
+        <!-- puzzle piece inside the ring: a single, instantly-recognizable jigsaw piece -->
+        <g transform="translate(100,100) scale(0.8) translate(-100,-100) translate(0,6)">
+          <path class="puzzle" pathLength="1" d="M76,70 L88,70 A12,12 0 0 0 112,70 L124,70 A6,6 0 0 1 130,76 L130,88 A12,12 0 0 0 130,112 L130,124 A6,6 0 0 1 124,130 L76,130 A6,6 0 0 1 70,124 L70,76 A6,6 0 0 1 76,70 Z"/>
+        </g>
+
+        <!-- Q tail: starts exactly where the ring opens, so it reads as one continuous letterform, then breaks into a checkmark -->
+        <polyline class="check" pathLength="1" points="130,163 150,182 190,120"/>
 
         <!-- spark burst at the checkmark tip -->
         <g class="spark">
-          <line x1="178" y1="100" x2="178" y2="88"/>
-          <line x1="196" y1="118" x2="208" y2="118"/>
-          <line x1="192" y1="104" x2="200" y2="96"/>
-          <line x1="192" y1="132" x2="200" y2="140"/>
+          <line x1="190" y1="102" x2="190" y2="90"/>
+          <line x1="208" y1="120" x2="220" y2="120"/>
+          <line x1="204" y1="106" x2="212" y2="98"/>
+          <line x1="204" y1="134" x2="212" y2="142"/>
         </g>
       </svg>
     </div>
@@ -324,9 +342,9 @@
     quoteText.textContent = quotes[quoteIndex];
   }, 1000);
 
-  setTimeout(() => logoWrap.classList.add('formed'), 1600);
+  setTimeout(() => logoWrap.classList.add('formed'), 2350);
 
-  const startDelay = 2000;
+  const startDelay = 2750;
   const duration = 4200;
   let startTime = null;
 
