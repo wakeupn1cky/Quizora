@@ -112,6 +112,15 @@
   .details-card { padding: 28px; margin-bottom: 32px; }
   .details-card h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 20px; }
 
+  .details-grid-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--card-border);
+  }
+
   .details-grid {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
@@ -384,11 +393,33 @@
   #builderView.hidden { display: none; }
 
   .monitor-head {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
   }
   .monitor-head .quiz-title { font-size: 22px; font-weight: 700; }
-  .monitor-head .quiz-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .monitor-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    font-size: 12px; color: var(--muted);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  .chip strong { color: var(--ink); font-weight: 700; }
+
+  .monitor-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .btn-amber {
+    background: rgba(255,201,60,0.1);
+    border: 1px solid rgba(255,201,60,0.4);
+    color: var(--amber);
+  }
+  .btn-amber:hover { background: rgba(255,201,60,0.18); transform: translateY(-2px); }
+  .btn-amber:disabled, .btn-primary:disabled {
+    opacity: 0.4; pointer-events: none; transform: none; box-shadow: none;
+  }
+
   .back-link {
     all: unset; font-size: 13px; font-weight: 600; color: var(--muted);
     padding: 8px 14px; border: 1px solid var(--card-border); border-radius: 999px;
@@ -477,6 +508,7 @@
      RESPONSIVE
      ============================================================ */
   @media (max-width: 860px) {
+    .details-grid-top { grid-template-columns: 1fr; }
     .details-grid { grid-template-columns: 1fr; }
     .duration-row { max-width: 260px; }
     .monitor-grid { grid-template-columns: 1fr; }
@@ -548,6 +580,22 @@
       <form id="quizForm" novalidate>
         <div class="panel details-card">
           <h2>Quiz details</h2>
+
+          <div class="details-grid-top">
+            <div class="field">
+              <label for="professorName">Professor name</label>
+              <input type="text" id="professorName" name="professorName" placeholder="e.g. Dr. Aditi Sharma">
+            </div>
+            <div class="field">
+              <label for="subjectName">Subject name</label>
+              <input type="text" id="subjectName" name="subjectName" placeholder="e.g. Data Structures">
+            </div>
+            <div class="field">
+              <label for="departmentName">Department name</label>
+              <input type="text" id="departmentName" name="departmentName" placeholder="e.g. Computer Science">
+            </div>
+          </div>
+
           <div class="details-grid">
             <div class="field" id="quizNameField">
               <label for="quizName">Test / Quiz name</label>
@@ -599,9 +647,18 @@
       <div class="monitor-head">
         <div>
           <div class="quiz-title" id="monitorQuizName">Untitled quiz</div>
-          <div class="quiz-meta">Code: <span id="monitorQuizCode">------</span> · Live monitoring</div>
+          <div class="monitor-chips">
+            <span class="chip">Professor: <strong id="monitorProfessorName">—</strong></span>
+            <span class="chip">Subject: <strong id="monitorSubjectName">—</strong></span>
+            <span class="chip">Department: <strong id="monitorDepartmentName">—</strong></span>
+            <span class="chip">Code: <strong id="monitorQuizCode">------</strong></span>
+          </div>
         </div>
-        <button class="back-link" id="backToEditorBtn" type="button">◀ Back to editor</button>
+        <div class="monitor-actions">
+          <button class="btn btn-amber" id="pauseTestBtn" type="button">Pause test</button>
+          <button class="btn btn-primary" id="completeTestBtn" type="button">Complete test</button>
+          <button class="back-link" id="backToEditorBtn" type="button">◀ Back to editor</button>
+        </div>
       </div>
 
       <div class="monitor-grid">
@@ -954,10 +1011,14 @@ quizForm.addEventListener('submit', (e) => {
 
   document.getElementById('monitorQuizName').textContent = quizName;
   document.getElementById('monitorQuizCode').textContent = quizCode;
+  document.getElementById('monitorProfessorName').textContent = document.getElementById('professorName').value.trim() || '—';
+  document.getElementById('monitorSubjectName').textContent = document.getElementById('subjectName').value.trim() || '—';
+  document.getElementById('monitorDepartmentName').textContent = document.getElementById('departmentName').value.trim() || '—';
 
   document.getElementById('builderView').classList.add('hidden');
   document.getElementById('monitorView').classList.add('active');
 
+  resetTestControls();
   startTimer(hours * 3600 + minutes * 60);
   renderLeaderboard(SAMPLE_LEADERBOARD);
 });
@@ -966,6 +1027,7 @@ document.getElementById('backToEditorBtn').addEventListener('click', () => {
   document.getElementById('monitorView').classList.remove('active');
   document.getElementById('builderView').classList.remove('hidden');
   stopTimer();
+  resetTestControls();
 });
 
 /* ---------------------------------------------------------------------
@@ -1023,11 +1085,51 @@ function updateTimerDisplay() {
   timerRing.style.strokeDashoffset = offset;
 }
 
+const pauseTestBtn    = document.getElementById('pauseTestBtn');
+const completeTestBtn = document.getElementById('completeTestBtn');
+let isPaused = false;
+
+function resetTestControls() {
+  isPaused = false;
+  pauseTestBtn.disabled = false;
+  completeTestBtn.disabled = false;
+  pauseTestBtn.textContent = 'Pause test';
+}
+
+pauseTestBtn.addEventListener('click', () => {
+  if (secondsLeft <= 0) return;
+  isPaused = !isPaused;
+
+  if (isPaused) {
+    stopTimer();
+    timerStatus.textContent = 'Paused';
+    timerSub.textContent = 'The quiz has been paused by the professor.';
+    pauseTestBtn.textContent = 'Resume test';
+    // BACKEND: notify the server to stop accepting timed actions while paused
+  } else {
+    timerInterval = setInterval(tickTimer, 1000);
+    timerStatus.textContent = 'In progress';
+    timerSub.textContent = 'Students are currently taking this quiz.';
+    pauseTestBtn.textContent = 'Pause test';
+    // BACKEND: notify the server the quiz has resumed
+  }
+});
+
+completeTestBtn.addEventListener('click', () => {
+  const ok = confirm('Mark this test as complete? Students will no longer be able to submit.');
+  if (!ok) return;
+  endQuiz();
+  timerSub.textContent = 'Test completed by the professor.';
+  // BACKEND: notify the server to close submissions immediately
+});
+
 function endQuiz() {
   stopTimer();
   timerPanel.classList.add('ended');
   timerStatus.textContent = 'Quiz ended';
   timerSub.textContent = 'Time is up — no further submissions are being accepted.';
+  pauseTestBtn.disabled = true;
+  completeTestBtn.disabled = true;
   // BACKEND: this is a good hook to stop accepting submissions / lock the leaderboard
 }
 
