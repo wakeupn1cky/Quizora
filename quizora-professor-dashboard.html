@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quizora — Professor Dashboard</title>
+<style>
+  :root{
+    --bg: #0E1030;
+    --bg-elevated: #141736;
+    --violet: #7C4DFF;
+    --violet-soft: #A78BFA;
+    --mint: #00E5A0;
+    --amber: #FFC93C;
+    --danger: #FF6B6B;
+    --ink: #FFFFFF;
+    --muted: #9B96C9;
+    --muted-dim: #726D9C;
+    --card-bg: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.08);
+    --card-border-hover: rgba(255,255,255,0.16);
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
+  html { color-scheme: dark; }
+
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(124,77,255,0.10), transparent 45%),
+      radial-gradient(circle at 85% 10%, rgba(0,229,160,0.06), transparent 40%),
+      var(--bg);
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    color: var(--ink);
+  }
+
+  button, input, textarea { font-family: inherit; color: inherit; }
+  button { cursor: pointer; }
+  input:focus-visible, textarea:focus-visible, button:focus-visible {
+    outline: 2px solid var(--violet-soft);
+    outline-offset: 2px;
+  }
+
+  /* ============================================================
+     TOP NAV — static brand mark (the animated intro lives on the
+     landing/role-select page; the dashboard just shows the mark)
+     ============================================================ */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(14,16,48,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand svg { width: 34px; height: 34px; overflow: visible; }
+  .brand-name { font-weight: 800; font-size: 16px; letter-spacing: 2px; }
+  .brand-name span { color: var(--mint); }
+
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .role-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px 6px 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+  }
+  .role-pill .mini-avatar { width: 26px; height: 26px; border-radius: 50%; }
+  .role-pill strong { color: var(--ink); font-weight: 700; }
+
+  /* ============================================================
+     SHELL
+     ============================================================ */
+  .shell { max-width: 900px; margin: 0 auto; padding: 36px 24px 100px; }
+
+  .page-head { margin-bottom: 28px; }
+  .page-head .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--violet-soft); margin-bottom: 6px;
+  }
+  .page-head h1 { font-size: 28px; font-weight: 700; }
+  .page-head p { margin-top: 6px; font-size: 14px; color: var(--muted); }
+
+  /* ============================================================
+     SHARED CARD LOOK
+     ============================================================ */
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.22);
+  }
+
+  /* ============================================================
+     QUIZ DETAILS CARD
+     ============================================================ */
+  .details-card { padding: 28px; margin-bottom: 32px; }
+  .details-card h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 20px; }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 18px;
+    align-items: end;
+  }
+
+  .field label {
+    display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+    color: var(--muted); margin-bottom: 8px; text-transform: uppercase;
+  }
+  .field input[type="text"], .field input[type="number"] {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 15px;
+    color: var(--ink);
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .field input::placeholder { color: var(--muted-dim); }
+  .field input:hover { border-color: var(--card-border-hover); }
+  .field input:focus { border-color: var(--violet); background: rgba(124,77,255,0.06); outline: none; }
+  .field input.field-error { border-color: var(--danger); }
+
+  .field.invalid .error-msg { display: block; }
+  .error-msg {
+    display: none;
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 6px;
+  }
+
+  .duration-row { display: flex; gap: 10px; }
+  .duration-row .field { flex: 1; }
+
+  .quiz-code-row {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed var(--card-border-hover);
+    border-radius: var(--radius-sm);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .quiz-code-row .code-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .quiz-code-row .code-value {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--muted-dim);
+  }
+  .quiz-code-row .code-hint { font-size: 11px; color: var(--muted-dim); width: 100%; }
+
+  /* ============================================================
+     QUESTIONS SECTION
+     ============================================================ */
+  .questions-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .questions-head h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+  .questions-head .q-count { font-size: 13px; color: var(--muted); }
+
+  .question-card {
+    padding: 22px 24px;
+    margin-bottom: 18px;
+    position: relative;
+    transition: border-color 0.2s ease;
+    animation: card-in 0.35s ease;
+  }
+  @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .question-card:focus-within { border-color: var(--card-border-hover); }
+
+  .q-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .q-number { font-size: 13px; font-weight: 700; letter-spacing: 1px; color: var(--violet-soft); text-transform: uppercase; }
+
+  .q-menu-wrap { position: relative; }
+  .q-menu-btn {
+    all: unset; width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--muted); letter-spacing: 2px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .q-menu-btn:hover { background: rgba(255,255,255,0.06); color: var(--ink); }
+
+  .q-menu-dropdown {
+    display: none;
+    position: absolute; top: 36px; right: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--card-border-hover);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+    min-width: 170px;
+    padding: 6px;
+    z-index: 5;
+  }
+  .q-menu-dropdown.open { display: block; }
+  .q-menu-item {
+    all: unset; display: block; width: 100%; box-sizing: border-box;
+    padding: 9px 12px; font-size: 13px; font-weight: 600; border-radius: 8px;
+    color: var(--ink);
+  }
+  .q-menu-item:hover { background: rgba(255,255,255,0.06); }
+  .q-menu-item.danger { color: var(--danger); }
+  .q-menu-item.danger:hover { background: rgba(255,107,107,0.1); }
+
+  .q-text-input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    font-size: 15px;
+    resize: vertical;
+    min-height: 46px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .q-text-input::placeholder { color: var(--muted-dim); }
+  .q-text-input:hover { border-color: var(--card-border-hover); }
+  .q-text-input:focus { border-color: var(--violet); background: rgba(124,77,255,0.06); outline: none; }
+  .q-text-input.field-error { border-color: var(--danger); }
+
+  .q-options { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .q-option-row { display: flex; align-items: center; gap: 10px; }
+
+  .q-correct-radio {
+    appearance: none; -webkit-appearance: none;
+    width: 20px; height: 20px; min-width: 20px;
+    border: 2px solid var(--card-border-hover);
+    border-radius: 50%;
+    position: relative;
+    transition: border-color 0.2s ease;
+  }
+  .q-correct-radio:checked { border-color: var(--mint); }
+  .q-correct-radio:checked::after {
+    content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--mint);
+  }
+
+  .q-option-input {
+    flex: 1;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 13px;
+    font-size: 14px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .q-option-input::placeholder { color: var(--muted-dim); }
+  .q-option-input:hover { border-color: var(--card-border-hover); }
+  .q-option-input:focus { border-color: var(--violet); background: rgba(124,77,255,0.06); outline: none; }
+  .q-option-input.field-error { border-color: var(--danger); }
+
+  .q-remove-option {
+    all: unset; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 13px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .q-remove-option:hover { background: rgba(255,107,107,0.12); color: var(--danger); }
+  .q-remove-option.spacer { visibility: hidden; }
+
+  .q-add-option-btn {
+    all: unset;
+    margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; color: var(--violet-soft);
+    padding: 7px 4px;
+    transition: color 0.2s ease, opacity 0.2s ease;
+  }
+  .q-add-option-btn:hover { color: var(--ink); }
+  .q-add-option-btn:disabled { opacity: 0.35; pointer-events: none; }
+
+  .q-card-body.collapsed { display: none; }
+  .q-collapsed-summary {
+    display: none;
+    font-size: 14px; color: var(--muted);
+    padding-top: 2px;
+  }
+  .question-card.collapsed .q-collapsed-summary { display: block; }
+  .question-card.collapsed { padding-bottom: 20px; }
+
+  /* Add question */
+  .add-question-btn {
+    all: unset;
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 16px;
+    margin-bottom: 34px;
+    border: 1.5px dashed var(--card-border-hover);
+    border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 700; color: var(--muted);
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .add-question-btn:hover { border-color: var(--violet); color: var(--violet-soft); background: rgba(124,77,255,0.05); }
+  .add-question-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  /* ============================================================
+     ACTION BUTTONS
+     ============================================================ */
+  .action-row { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  .btn {
+    all: unset;
+    box-sizing: border-box;
+    padding: 14px 26px;
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
+    text-align: center;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+
+  .btn-primary {
+    background: linear-gradient(90deg, var(--violet), var(--violet-soft));
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(124,77,255,0.3);
+  }
+  .btn-primary:hover { box-shadow: 0 10px 26px rgba(124,77,255,0.45); transform: translateY(-2px); }
+
+  .btn-secondary {
+    background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.35);
+    color: var(--mint);
+  }
+  .btn-secondary:hover { background: rgba(0,229,160,0.18); transform: translateY(-2px); }
+
+  .btn-danger {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .btn-danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(255,107,107,0.08); }
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--bg-elevated);
+    border: 1px solid var(--card-border-hover);
+    padding: 13px 22px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 50;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); }
+
+  /* ============================================================
+     LIVE MONITORING VIEW
+     ============================================================ */
+  #monitorView { display: none; }
+  #monitorView.active { display: block; }
+  #builderView.hidden { display: none; }
+
+  .monitor-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .monitor-head .quiz-title { font-size: 22px; font-weight: 700; }
+  .monitor-head .quiz-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .back-link {
+    all: unset; font-size: 13px; font-weight: 600; color: var(--muted);
+    padding: 8px 14px; border: 1px solid var(--card-border); border-radius: 999px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .back-link:hover { color: var(--ink); border-color: var(--card-border-hover); }
+
+  .monitor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* --- Timer panel --- */
+  .timer-panel { padding: 36px 28px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .timer-panel h2 { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 26px; }
+
+  .timer-ring-wrap { position: relative; width: 220px; height: 220px; }
+  .timer-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .timer-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12; }
+  .timer-ring-fg {
+    fill: none; stroke: url(#timerGradient); stroke-width: 12; stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .timer-display {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .timer-display .time { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+  .timer-display .status { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mint); margin-top: 4px; }
+
+  .timer-panel.ended .timer-ring-fg { stroke: url(#endedGradient); }
+  .timer-panel.ended .timer-display .status { color: var(--danger); }
+  .timer-panel.ended .timer-display .time { color: var(--muted); }
+
+  .timer-sub { margin-top: 24px; font-size: 13px; color: var(--muted); }
+
+  /* --- Leaderboard panel --- */
+  .leaderboard-panel { padding: 26px; }
+  .leaderboard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .leaderboard-head h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--mint);
+  }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); animation: pulse-dot 1.4s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .leaderboard-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; max-height: 320px; overflow-y: auto; }
+  .lb-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 12px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+  }
+  .lb-rank {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+    background: rgba(255,255,255,0.06); color: var(--muted);
+    flex-shrink: 0;
+  }
+  .lb-row.rank-1 .lb-rank { background: linear-gradient(135deg, #FFD35C, #FFC93C); color: #3a2a00; }
+  .lb-row.rank-2 .lb-rank { background: linear-gradient(135deg, #E4E4F0, #C3C3D9); color: #2a2a3a; }
+  .lb-row.rank-3 .lb-rank { background: linear-gradient(135deg, #E0A96D, #C98A4B); color: #3a2200; }
+
+  .lb-name { flex: 1; font-size: 14px; font-weight: 600; }
+  .lb-score { font-size: 14px; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; }
+
+  .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stat-card {
+    padding: 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+  .stat-card .stat-value { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat-card .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .stat-card.submitted .stat-value { color: var(--mint); }
+  .stat-card.pending .stat-value { color: var(--amber); }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 860px) {
+    .details-grid { grid-template-columns: 1fr; }
+    .duration-row { max-width: 260px; }
+    .monitor-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .shell { padding: 24px 16px 90px; }
+    .topbar { padding: 12px 16px; }
+    .action-row { flex-direction: column; }
+    .btn-danger { margin-left: 0; }
+    .timer-ring-wrap { width: 180px; height: 180px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP NAV
+       ============================================================ -->
+  <div class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="navRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7C4DFF"/>
+            <stop offset="100%" stop-color="#A78BFA"/>
+          </linearGradient>
+        </defs>
+        <path fill="none" stroke="url(#navRingGradient)" stroke-width="13" stroke-linecap="round"
+              d="M129.6,163.4 A70,70 0 1,1 169.7,106.1"/>
+        <g transform="translate(100,100) scale(0.8) translate(-100,-100) translate(0,6)">
+          <path fill="none" stroke="#A78BFA" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"
+                d="M76,70 L88,70 A12,12 0 0 0 112,70 L124,70 A6,6 0 0 1 130,76 L130,88 A12,12 0 0 0 130,112 L130,124 A6,6 0 0 1 124,130 L76,130 A6,6 0 0 1 70,124 L70,76 A6,6 0 0 1 76,70 Z"/>
+        </g>
+        <polyline fill="none" stroke="#00E5A0" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"
+                   points="130,163 150,182 190,120"/>
+      </svg>
+      <div class="brand-name">QUIZ<span>ORA</span></div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="role-pill">
+        <svg class="mini-avatar" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="50" fill="#7C4DFF"/>
+          <circle cx="50" cy="38" r="15" fill="#fff"/>
+          <path d="M18,96 C18,68 34,58 50,58 C66,58 82,68 82,96 Z" fill="#fff"/>
+          <path d="M50,58 L38,72 L44,96" stroke="#7C4DFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M50,58 L62,72 L56,96" stroke="#7C4DFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M50,64 L46,80 L50,90 L54,80 Z" fill="#FFC93C"/>
+        </svg>
+        <span>Signed in as <strong>Professor</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="shell">
+
+    <!-- ============================================================
+         BUILDER VIEW
+         ============================================================ -->
+    <div id="builderView">
+
+      <div class="page-head">
+        <div class="eyebrow">Quiz Builder</div>
+        <h1>Create a new quiz</h1>
+        <p>Set the details below, then add up to 10 questions.</p>
+      </div>
+
+      <!-- Quiz details -->
+      <form id="quizForm" novalidate>
+        <div class="panel details-card">
+          <h2>Quiz details</h2>
+          <div class="details-grid">
+            <div class="field" id="quizNameField">
+              <label for="quizName">Test / Quiz name</label>
+              <input type="text" id="quizName" name="quizName" placeholder="e.g. Unit 3 — Data Structures">
+              <div class="error-msg">Give your quiz a name.</div>
+            </div>
+            <div class="duration-row">
+              <div class="field">
+                <label for="durationHours">Hours</label>
+                <input type="number" id="durationHours" name="durationHours" min="0" max="23" value="0">
+              </div>
+              <div class="field">
+                <label for="durationMinutes">Minutes</label>
+                <input type="number" id="durationMinutes" name="durationMinutes" min="0" max="59" value="30">
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-code-row">
+            <span class="code-label">Quiz code</span>
+            <span class="code-value" id="quizCodeValue" data-quiz-code="">------</span>
+            <span class="code-hint"><!-- BACKEND: populate #quizCodeValue with the generated code once the quiz is saved --> Generated automatically by the server after saving.</span>
+          </div>
+        </div>
+
+        <!-- Questions -->
+        <div class="questions-head">
+          <h2>Questions</h2>
+          <span class="q-count"><span id="qCountLabel">1</span> / 10</span>
+        </div>
+
+        <div id="questionsContainer"><!-- question cards injected by JS --></div>
+
+        <button type="button" class="add-question-btn" id="addQuestionBtn">+ Add question</button>
+
+        <!-- Action buttons -->
+        <div class="action-row">
+          <button type="submit" class="btn btn-primary" id="submitQuizBtn">Submit quiz</button>
+          <button type="button" class="btn btn-secondary" id="saveChangesBtn">Save changes</button>
+          <button type="button" class="btn btn-danger" id="clearAllBtn">Clear all questions</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ============================================================
+         LIVE MONITORING VIEW
+         ============================================================ -->
+    <div id="monitorView">
+      <div class="monitor-head">
+        <div>
+          <div class="quiz-title" id="monitorQuizName">Untitled quiz</div>
+          <div class="quiz-meta">Code: <span id="monitorQuizCode">------</span> · Live monitoring</div>
+        </div>
+        <button class="back-link" id="backToEditorBtn" type="button">◀ Back to editor</button>
+      </div>
+
+      <div class="monitor-grid">
+
+        <!-- Timer -->
+        <div class="panel timer-panel" id="timerPanel">
+          <h2>Time remaining</h2>
+          <div class="timer-ring-wrap">
+            <svg viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7C4DFF"/>
+                  <stop offset="60%" stop-color="#00E5A0"/>
+                  <stop offset="100%" stop-color="#FFC93C"/>
+                </linearGradient>
+                <linearGradient id="endedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FF6B6B"/>
+                  <stop offset="100%" stop-color="#FF9B6B"/>
+                </linearGradient>
+              </defs>
+              <circle class="timer-ring-bg" cx="110" cy="110" r="98"/>
+              <circle class="timer-ring-fg" id="timerRing" cx="110" cy="110" r="98"/>
+            </svg>
+            <div class="timer-display">
+              <div class="time" id="timerText">00:30:00</div>
+              <div class="status" id="timerStatus">In progress</div>
+            </div>
+          </div>
+          <div class="timer-sub" id="timerSub">Students are currently taking this quiz.</div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="panel leaderboard-panel">
+          <div class="leaderboard-head">
+            <h2>Live leaderboard</h2>
+            <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+          </div>
+
+          <div class="leaderboard-list" id="leaderboardList">
+            <!-- BACKEND: replace with rows rendered from live submission data, sorted by score desc -->
+          </div>
+
+          <div class="stat-cards">
+            <div class="stat-card submitted">
+              <div class="stat-value" id="statSubmitted">0</div>
+              <div class="stat-label">Submitted</div>
+            </div>
+            <div class="stat-card pending">
+              <div class="stat-value" id="statPending">0</div>
+              <div class="stat-label">Yet to submit</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"><span class="dot"></span><span id="toastText">Saved</span></div>
+
+<script>
+/* =====================================================================
+   QUIZORA — Professor Dashboard (frontend only)
+   No backend calls are made anywhere in this file. Form fields use
+   PHP-friendly bracket naming (questions[n][text], questions[n][options][i])
+   so a PHP handler can read them directly via $_POST — swap the <form>'s
+   action/method and wire a real submit once the backend is ready.
+   ===================================================================== */
+
+const MAX_QUESTIONS = 10;
+const MIN_OPTIONS = 2;
+const MAX_OPTIONS = 6;
+
+const questionsContainer = document.getElementById('questionsContainer');
+const addQuestionBtn     = document.getElementById('addQuestionBtn');
+const qCountLabel         = document.getElementById('qCountLabel');
+const quizForm            = document.getElementById('quizForm');
+const toast                = document.getElementById('toast');
+const toastText            = document.getElementById('toastText');
+
+let questionCounter = 0; // increments forever, used only to generate unique DOM ids
+
+/* ---------------------------------------------------------------------
+   Question card creation
+   --------------------------------------------------------------------- */
+function createQuestionCard() {
+  questionCounter++;
+  const card = document.createElement('div');
+  card.className = 'question-card panel';
+  card.dataset.uid = questionCounter;
+
+  card.innerHTML = `
+    <div class="q-card-header">
+      <span class="q-number">Question <span class="q-index">${questionCounter}</span></span>
+      <div class="q-menu-wrap">
+        <button type="button" class="q-menu-btn" aria-label="Question options">&#8942;</button>
+        <div class="q-menu-dropdown">
+          <button type="button" class="q-menu-item" data-action="toggle-collapse">Collapse question</button>
+          <button type="button" class="q-menu-item danger" data-action="delete">Delete question</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="q-card-body">
+      <textarea class="q-text-input" placeholder="Type your question here" rows="2"></textarea>
+
+      <div class="q-options">
+        <div class="q-option-row">
+          <input type="radio" class="q-correct-radio" checked>
+          <input type="text" class="q-option-input" placeholder="Option 1">
+          <button type="button" class="q-remove-option spacer" aria-label="Remove option">&#10005;</button>
+        </div>
+        <div class="q-option-row">
+          <input type="radio" class="q-correct-radio">
+          <input type="text" class="q-option-input" placeholder="Option 2">
+          <button type="button" class="q-remove-option spacer" aria-label="Remove option">&#10005;</button>
+        </div>
+      </div>
+
+      <button type="button" class="q-add-option-btn">+ Add option</button>
+    </div>
+
+    <div class="q-collapsed-summary"></div>
+  `;
+
+  questionsContainer.appendChild(card);
+  wireQuestionCard(card);
+  renumberAndSyncNames();
+  return card;
+}
+
+function wireQuestionCard(card) {
+  const menuBtn      = card.querySelector('.q-menu-btn');
+  const menuDropdown = card.querySelector('.q-menu-dropdown');
+  const addOptionBtn = card.querySelector('.q-add-option-btn');
+  const optionsWrap  = card.querySelector('.q-options');
+  const textInput    = card.querySelector('.q-text-input');
+
+  // 3-dot menu open/close
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.q-menu-dropdown.open').forEach(d => { if (d !== menuDropdown) d.classList.remove('open'); });
+    menuDropdown.classList.toggle('open');
+  });
+
+  // Menu actions
+  menuDropdown.addEventListener('click', (e) => {
+    const action = e.target.dataset.action;
+    if (!action) return;
+    if (action === 'delete') deleteQuestionCard(card);
+    if (action === 'toggle-collapse') toggleCollapse(card);
+    menuDropdown.classList.remove('open');
+  });
+
+  // Add option
+  addOptionBtn.addEventListener('click', () => addOption(card));
+
+  // Enforce max length lightly + live-update collapsed summary text
+  textInput.addEventListener('input', () => updateCollapsedSummary(card));
+
+  wireOptionRow(card.querySelectorAll('.q-option-row')[0]);
+  wireOptionRow(card.querySelectorAll('.q-option-row')[1]);
+  refreshOptionButtons(card);
+}
+
+function wireOptionRow(row) {
+  const removeBtn = row.querySelector('.q-remove-option');
+  removeBtn.addEventListener('click', () => {
+    const card = row.closest('.question-card');
+    row.remove();
+    refreshOptionButtons(card);
+    renumberAndSyncNames();
+  });
+}
+
+function addOption(card) {
+  const optionsWrap = card.querySelector('.q-options');
+  const rows = optionsWrap.querySelectorAll('.q-option-row');
+  if (rows.length >= MAX_OPTIONS) return;
+
+  const row = document.createElement('div');
+  row.className = 'q-option-row';
+  row.innerHTML = `
+    <input type="radio" class="q-correct-radio">
+    <input type="text" class="q-option-input" placeholder="Option ${rows.length + 1}">
+    <button type="button" class="q-remove-option" aria-label="Remove option">&#10005;</button>
+  `;
+  optionsWrap.appendChild(row);
+  wireOptionRow(row);
+  refreshOptionButtons(card);
+  renumberAndSyncNames();
+  row.querySelector('.q-option-input').focus();
+}
+
+function refreshOptionButtons(card) {
+  const rows = card.querySelectorAll('.q-option-row');
+  const addBtn = card.querySelector('.q-add-option-btn');
+
+  rows.forEach((row, i) => {
+    const removeBtn = row.querySelector('.q-remove-option');
+    const input = row.querySelector('.q-option-input');
+    input.placeholder = `Option ${i + 1}`;
+    if (rows.length <= MIN_OPTIONS) {
+      removeBtn.classList.add('spacer');
+    } else {
+      removeBtn.classList.remove('spacer');
+    }
+  });
+
+  addBtn.disabled = rows.length >= MAX_OPTIONS;
+  addBtn.textContent = rows.length >= MAX_OPTIONS ? 'Maximum 6 options' : '+ Add option';
+}
+
+function toggleCollapse(card) {
+  const body = card.querySelector('.q-card-body');
+  const menuItem = card.querySelector('[data-action="toggle-collapse"]');
+  const collapsed = card.classList.toggle('collapsed');
+  body.classList.toggle('collapsed', collapsed);
+  menuItem.textContent = collapsed ? 'Expand question' : 'Collapse question';
+  if (collapsed) updateCollapsedSummary(card);
+}
+
+function updateCollapsedSummary(card) {
+  const text = card.querySelector('.q-text-input').value.trim();
+  const summary = card.querySelector('.q-collapsed-summary');
+  summary.textContent = text || 'Untitled question';
+}
+
+function deleteQuestionCard(card) {
+  const total = questionsContainer.querySelectorAll('.question-card').length;
+  if (total <= 1) {
+    showToast('At least one question is required');
+    return;
+  }
+  card.remove();
+  renumberAndSyncNames();
+}
+
+/* ---------------------------------------------------------------------
+   Renumbering + PHP-friendly name syncing
+   Every question/option input's `name` attribute is rewritten to match
+   its current visual position, e.g. questions[3][options][1], so the
+   payload the backend receives is always in a clean, predictable order.
+   --------------------------------------------------------------------- */
+function renumberAndSyncNames() {
+  const cards = questionsContainer.querySelectorAll('.question-card');
+
+  cards.forEach((card, qi) => {
+    const n = qi + 1;
+    card.querySelector('.q-index').textContent = n;
+
+    const textInput = card.querySelector('.q-text-input');
+    textInput.name = `questions[${n}][text]`;
+
+    card.querySelectorAll('.q-option-row').forEach((row, oi) => {
+      row.querySelector('.q-correct-radio').name = `questions[${n}][correct]`;
+      row.querySelector('.q-correct-radio').value = oi;
+      row.querySelector('.q-option-input').name = `questions[${n}][options][${oi}]`;
+    });
+  });
+
+  qCountLabel.textContent = cards.length;
+  addQuestionBtn.disabled = cards.length >= MAX_QUESTIONS;
+  addQuestionBtn.textContent = cards.length >= MAX_QUESTIONS ? 'Maximum 10 questions reached' : '+ Add question';
+}
+
+addQuestionBtn.addEventListener('click', () => {
+  if (questionsContainer.querySelectorAll('.question-card').length >= MAX_QUESTIONS) return;
+  const card = createQuestionCard();
+  card.querySelector('.q-text-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+// Close any open 3-dot menu when clicking outside it
+document.addEventListener('click', () => {
+  document.querySelectorAll('.q-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+});
+
+/* ---------------------------------------------------------------------
+   Save changes / Clear all (frontend-only feedback, no backend calls)
+   --------------------------------------------------------------------- */
+document.getElementById('saveChangesBtn').addEventListener('click', () => {
+  // BACKEND: send quizForm's data here (e.g. via fetch/FormData) once an endpoint exists
+  showToast('Changes saved');
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  const ok = confirm('Clear all questions? This cannot be undone.');
+  if (!ok) return;
+  questionsContainer.innerHTML = '';
+  createQuestionCard();
+  showToast('All questions cleared');
+});
+
+function showToast(message) {
+  toastText.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+/* ---------------------------------------------------------------------
+   Validation (frontend-only — checks completeness before "submitting")
+   --------------------------------------------------------------------- */
+function validateQuiz() {
+  let valid = true;
+
+  const quizNameField = document.getElementById('quizNameField');
+  const quizNameInput = document.getElementById('quizName');
+  quizNameField.classList.remove('invalid');
+  quizNameInput.classList.remove('field-error');
+  if (!quizNameInput.value.trim()) {
+    quizNameField.classList.add('invalid');
+    quizNameInput.classList.add('field-error');
+    valid = false;
+  }
+
+  questionsContainer.querySelectorAll('.question-card').forEach(card => {
+    const textInput = card.querySelector('.q-text-input');
+    textInput.classList.toggle('field-error', !textInput.value.trim());
+    if (!textInput.value.trim()) valid = false;
+
+    card.querySelectorAll('.q-option-input').forEach(opt => {
+      opt.classList.toggle('field-error', !opt.value.trim());
+      if (!opt.value.trim()) valid = false;
+    });
+  });
+
+  return valid;
+}
+
+/* ---------------------------------------------------------------------
+   Submit quiz -> switch to live monitoring view
+   --------------------------------------------------------------------- */
+quizForm.addEventListener('submit', (e) => {
+  e.preventDefault(); // frontend demo only — a real submit will POST to the backend
+
+  if (!validateQuiz()) {
+    showToast('Please complete all required fields');
+    return;
+  }
+
+  // BACKEND: this is the moment to actually POST quizForm's data.
+  // e.g. fetch('/api/quizzes', { method: 'POST', body: new FormData(quizForm) })
+
+  const quizName = document.getElementById('quizName').value.trim();
+  const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
+  const minutes = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
+  const quizCode = document.getElementById('quizCodeValue').textContent;
+
+  document.getElementById('monitorQuizName').textContent = quizName;
+  document.getElementById('monitorQuizCode').textContent = quizCode;
+
+  document.getElementById('builderView').classList.add('hidden');
+  document.getElementById('monitorView').classList.add('active');
+
+  startTimer(hours * 3600 + minutes * 60);
+  renderLeaderboard(SAMPLE_LEADERBOARD);
+});
+
+document.getElementById('backToEditorBtn').addEventListener('click', () => {
+  document.getElementById('monitorView').classList.remove('active');
+  document.getElementById('builderView').classList.remove('hidden');
+  stopTimer();
+});
+
+/* ---------------------------------------------------------------------
+   Countdown timer (frontend display only)
+   --------------------------------------------------------------------- */
+const timerText   = document.getElementById('timerText');
+const timerStatus = document.getElementById('timerStatus');
+const timerSub    = document.getElementById('timerSub');
+const timerPanel  = document.getElementById('timerPanel');
+const timerRing   = document.getElementById('timerRing');
+
+const RING_RADIUS = 98;
+const RING_CIRC   = 2 * Math.PI * RING_RADIUS;
+timerRing.style.strokeDasharray = RING_CIRC;
+
+let timerInterval = null;
+let totalSeconds  = 0;
+let secondsLeft   = 0;
+
+function startTimer(seconds) {
+  stopTimer();
+  totalSeconds = Math.max(seconds, 1);
+  secondsLeft = totalSeconds;
+  timerPanel.classList.remove('ended');
+  timerStatus.textContent = 'In progress';
+  timerSub.textContent = 'Students are currently taking this quiz.';
+  updateTimerDisplay();
+  timerInterval = setInterval(tickTimer, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function tickTimer() {
+  secondsLeft--;
+  if (secondsLeft <= 0) {
+    secondsLeft = 0;
+    updateTimerDisplay();
+    endQuiz();
+    return;
+  }
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const h = Math.floor(secondsLeft / 3600);
+  const m = Math.floor((secondsLeft % 3600) / 60);
+  const s = secondsLeft % 60;
+  timerText.textContent = [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+
+  const progress = secondsLeft / totalSeconds;
+  const offset = RING_CIRC * (1 - progress);
+  timerRing.style.strokeDashoffset = offset;
+}
+
+function endQuiz() {
+  stopTimer();
+  timerPanel.classList.add('ended');
+  timerStatus.textContent = 'Quiz ended';
+  timerSub.textContent = 'Time is up — no further submissions are being accepted.';
+  // BACKEND: this is a good hook to stop accepting submissions / lock the leaderboard
+}
+
+/* ---------------------------------------------------------------------
+   Leaderboard (placeholder sample data)
+   BACKEND: replace SAMPLE_LEADERBOARD with live data, e.g. by polling
+   an endpoint every few seconds and calling renderLeaderboard(data) again.
+   Expected shape: [{ name: string, score: number }, ...]
+   --------------------------------------------------------------------- */
+const SAMPLE_LEADERBOARD = [
+  { name: 'Ananya Rao',     score: 9 },
+  { name: 'Karthik Iyer',   score: 8 },
+  { name: 'Priya Menon',    score: 8 },
+  { name: 'Rohan Das',      score: 6 },
+  { name: 'Sneha Pillai',   score: 5 },
+];
+
+const SAMPLE_TOTAL_STUDENTS = 42;
+
+function renderLeaderboard(data) {
+  const sorted = [...data].sort((a, b) => b.score - a.score);
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '';
+
+  sorted.forEach((entry, i) => {
+    const rank = i + 1;
+    const row = document.createElement('div');
+    row.className = `lb-row${rank <= 3 ? ' rank-' + rank : ''}`;
+    row.innerHTML = `
+      <div class="lb-rank">${rank}</div>
+      <div class="lb-name">${escapeHtml(entry.name)}</div>
+      <div class="lb-score">${entry.score} pts</div>
+    `;
+    list.appendChild(row);
+  });
+
+  const submitted = sorted.length;
+  document.getElementById('statSubmitted').textContent = submitted;
+  document.getElementById('statPending').textContent = Math.max(SAMPLE_TOTAL_STUDENTS - submitted, 0);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+   Init
+   --------------------------------------------------------------------- */
+createQuestionCard();
+</script>
+
+</body>
+</html>
