@@ -86,7 +86,7 @@
   /* ============================================================
      SHELL
      ============================================================ */
-  .shell { max-width: 900px; margin: 0 auto; padding: 36px 24px 100px; }
+  .shell { max-width: 960px; margin: 0 auto; padding: 36px 24px 100px; }
 
   .page-head { margin-bottom: 28px; }
   .page-head .eyebrow {
@@ -393,29 +393,61 @@
   #builderView.hidden { display: none; }
 
   .monitor-head {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 24px;
   }
-  .monitor-head .quiz-title { font-size: 22px; font-weight: 700; }
+  .monitor-head-top {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .monitor-head .quiz-title { font-size: 30px; font-weight: 700; }
 
-  .monitor-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .chip {
-    font-size: 12px; color: var(--muted);
+  .monitor-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    padding: 22px 24px;
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--card-border);
-    border-radius: 999px;
-    padding: 6px 12px;
+    border-radius: var(--radius-md);
   }
-  .chip strong { color: var(--ink); font-weight: 700; }
+  .info-item .info-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .info-item .info-value {
+    font-size: 24px; font-weight: 800; color: var(--ink);
+    overflow-wrap: break-word;
+  }
+  .info-item .info-value.code {
+    font-family: 'Courier New', monospace;
+    color: var(--mint);
+    letter-spacing: 2px;
+  }
 
   .monitor-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-  .btn-amber {
-    background: rgba(255,201,60,0.1);
-    border: 1px solid rgba(255,201,60,0.4);
-    color: var(--amber);
+  .timer-actions {
+    margin-top: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
   }
-  .btn-amber:hover { background: rgba(255,201,60,0.18); transform: translateY(-2px); }
+
+  .btn-large {
+    padding: 18px 26px;
+    font-size: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .btn-amber {
+    background: linear-gradient(90deg, #FFC93C, #FFDA75);
+    color: #3A2A00;
+    box-shadow: 0 8px 20px rgba(255,201,60,0.3);
+  }
+  .btn-amber:hover { box-shadow: 0 10px 26px rgba(255,201,60,0.45); transform: translateY(-2px); }
   .btn-amber:disabled, .btn-primary:disabled {
     opacity: 0.4; pointer-events: none; transform: none; box-shadow: none;
   }
@@ -430,15 +462,15 @@
   .monitor-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 28px;
     align-items: start;
   }
 
   /* --- Timer panel --- */
-  .timer-panel { padding: 36px 28px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .timer-panel h2 { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 26px; }
+  .timer-panel { padding: 46px 32px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .timer-panel h2 { font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 30px; }
 
-  .timer-ring-wrap { position: relative; width: 220px; height: 220px; }
+  .timer-ring-wrap { position: relative; width: 260px; height: 260px; }
   .timer-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .timer-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12; }
   .timer-ring-fg {
@@ -449,38 +481,38 @@
     position: absolute; inset: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
-  .timer-display .time { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-  .timer-display .status { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mint); margin-top: 4px; }
+  .timer-display .time { font-size: 50px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+  .timer-display .status { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mint); margin-top: 6px; }
 
   .timer-panel.ended .timer-ring-fg { stroke: url(#endedGradient); }
   .timer-panel.ended .timer-display .status { color: var(--danger); }
   .timer-panel.ended .timer-display .time { color: var(--muted); }
 
-  .timer-sub { margin-top: 24px; font-size: 13px; color: var(--muted); }
+  .timer-sub { margin-top: 28px; font-size: 15px; color: var(--muted); }
 
   /* --- Leaderboard panel --- */
-  .leaderboard-panel { padding: 26px; }
-  .leaderboard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-  .leaderboard-head h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+  .leaderboard-panel { padding: 32px; }
+  .leaderboard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .leaderboard-head h2 { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; }
   .live-badge {
     display: flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--mint);
+    font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--mint);
   }
   .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); animation: pulse-dot 1.4s ease-in-out infinite; }
   @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-  .leaderboard-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; max-height: 320px; overflow-y: auto; }
+  .leaderboard-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; max-height: 340px; overflow-y: auto; }
   .lb-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 11px 12px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 14px;
     background: rgba(255,255,255,0.025);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-sm);
   }
   .lb-rank {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 800;
+    font-size: 13px; font-weight: 800;
     background: rgba(255,255,255,0.06); color: var(--muted);
     flex-shrink: 0;
   }
@@ -488,19 +520,19 @@
   .lb-row.rank-2 .lb-rank { background: linear-gradient(135deg, #E4E4F0, #C3C3D9); color: #2a2a3a; }
   .lb-row.rank-3 .lb-rank { background: linear-gradient(135deg, #E0A96D, #C98A4B); color: #3a2200; }
 
-  .lb-name { flex: 1; font-size: 14px; font-weight: 600; }
-  .lb-score { font-size: 14px; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; }
+  .lb-name { flex: 1; font-size: 15px; font-weight: 600; }
+  .lb-score { font-size: 15px; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; }
 
-  .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .stat-card {
-    padding: 18px;
+    padding: 22px;
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-md);
     text-align: center;
   }
-  .stat-card .stat-value { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .stat-card .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .stat-card .stat-value { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat-card .stat-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
   .stat-card.submitted .stat-value { color: var(--mint); }
   .stat-card.pending .stat-value { color: var(--amber); }
 
@@ -518,7 +550,8 @@
     .topbar { padding: 12px 16px; }
     .action-row { flex-direction: column; }
     .btn-danger { margin-left: 0; }
-    .timer-ring-wrap { width: 180px; height: 180px; }
+    .timer-ring-wrap { width: 210px; height: 210px; }
+    .timer-actions { max-width: 100%; }
   }
 </style>
 </head>
@@ -645,19 +678,30 @@
          ============================================================ -->
     <div id="monitorView">
       <div class="monitor-head">
-        <div>
+        <div class="monitor-head-top">
           <div class="quiz-title" id="monitorQuizName">Untitled quiz</div>
-          <div class="monitor-chips">
-            <span class="chip">Professor: <strong id="monitorProfessorName">—</strong></span>
-            <span class="chip">Subject: <strong id="monitorSubjectName">—</strong></span>
-            <span class="chip">Department: <strong id="monitorDepartmentName">—</strong></span>
-            <span class="chip">Code: <strong id="monitorQuizCode">------</strong></span>
+          <div class="monitor-actions">
+            <button class="back-link" id="backToEditorBtn" type="button">◀ Back to editor</button>
           </div>
         </div>
-        <div class="monitor-actions">
-          <button class="btn btn-amber" id="pauseTestBtn" type="button">Pause test</button>
-          <button class="btn btn-primary" id="completeTestBtn" type="button">Complete test</button>
-          <button class="back-link" id="backToEditorBtn" type="button">◀ Back to editor</button>
+
+        <div class="monitor-info-grid">
+          <div class="info-item">
+            <div class="info-label">Professor</div>
+            <div class="info-value" id="monitorProfessorName">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Subject</div>
+            <div class="info-value" id="monitorSubjectName">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Department</div>
+            <div class="info-value" id="monitorDepartmentName">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Quiz code</div>
+            <div class="info-value code" id="monitorQuizCode">------</div>
+          </div>
         </div>
       </div>
 
@@ -688,6 +732,11 @@
             </div>
           </div>
           <div class="timer-sub" id="timerSub">Students are currently taking this quiz.</div>
+
+          <div class="timer-actions">
+            <button class="btn btn-large btn-amber" id="pauseTestBtn" type="button">Pause test</button>
+            <button class="btn btn-large btn-primary" id="completeTestBtn" type="button">Complete test</button>
+          </div>
         </div>
 
         <!-- Leaderboard -->
