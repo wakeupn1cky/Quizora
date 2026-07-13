@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quizora — Student Dashboard</title>
+<style>
+  :root{
+    --bg: #0E1030;
+    --bg-elevated: #141736;
+    --violet: #7C4DFF;
+    --violet-soft: #A78BFA;
+    --mint: #00E5A0;
+    --amber: #FFC93C;
+    --danger: #FF6B6B;
+    --ink: #FFFFFF;
+    --muted: #9B96C9;
+    --muted-dim: #726D9C;
+    --card-bg: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.08);
+    --card-border-hover: rgba(255,255,255,0.16);
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
+  html { color-scheme: dark; }
+
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(124,77,255,0.10), transparent 45%),
+      radial-gradient(circle at 85% 10%, rgba(0,229,160,0.06), transparent 40%),
+      var(--bg);
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    color: var(--ink);
+  }
+
+  button, input, textarea { font-family: inherit; color: inherit; }
+  button { cursor: pointer; }
+  input:focus-visible, button:focus-visible {
+    outline: 2px solid var(--violet-soft);
+    outline-offset: 2px;
+  }
+
+  /* ============================================================
+     TOP NAV
+     ============================================================ */
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(14,16,48,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand svg { width: 34px; height: 34px; overflow: visible; }
+  .brand-name { font-weight: 800; font-size: 16px; letter-spacing: 2px; }
+  .brand-name span { color: var(--mint); }
+
+  .role-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px 6px 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+  }
+  .role-pill .mini-avatar { width: 26px; height: 26px; border-radius: 50%; }
+  .role-pill strong { color: var(--ink); font-weight: 700; }
+
+  /* ============================================================
+     SHELL + SHARED
+     ============================================================ */
+  .shell { max-width: 720px; margin: 0 auto; padding: 36px 24px 100px; }
+
+  .page-head { margin-bottom: 28px; text-align: center; }
+  .page-head .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--violet-soft); margin-bottom: 6px;
+  }
+  .page-head h1 { font-size: 28px; font-weight: 700; }
+  .page-head p { margin-top: 8px; font-size: 14px; color: var(--muted); }
+
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.22);
+  }
+
+  .view { display: none; }
+  .view.active { display: block; animation: view-in 0.4s ease; }
+  @keyframes view-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+    color: var(--muted); margin-bottom: 8px; text-transform: uppercase;
+  }
+  .field input[type="text"] {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    font-size: 15px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .field input::placeholder { color: var(--muted-dim); }
+  .field input:hover { border-color: var(--card-border-hover); }
+  .field input:focus { border-color: var(--violet); background: rgba(124,77,255,0.06); outline: none; }
+  .field input.field-error { border-color: var(--danger); }
+
+  .btn {
+    all: unset;
+    box-sizing: border-box;
+    padding: 14px 26px;
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
+    text-align: center;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-large { padding: 16px 26px; font-size: 15px; width: 100%; }
+
+  .btn-primary {
+    background: linear-gradient(90deg, var(--violet), var(--violet-soft));
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(124,77,255,0.3);
+  }
+  .btn-primary:hover { box-shadow: 0 10px 26px rgba(124,77,255,0.45); transform: translateY(-2px); }
+  .btn-primary:disabled { opacity: 0.35; pointer-events: none; transform: none; box-shadow: none; }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--card-border-hover);
+    color: var(--ink);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.09); transform: translateY(-2px); }
+  .btn-secondary:disabled { opacity: 0.3; pointer-events: none; transform: none; }
+
+  .btn-outline-danger {
+    background: transparent;
+    border: 1px solid rgba(255,107,107,0.4);
+    color: var(--danger);
+  }
+  .btn-outline-danger:hover { background: rgba(255,107,107,0.1); transform: translateY(-2px); }
+
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(5,6,20,0.6);
+    backdrop-filter: blur(3px);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    padding: 20px;
+  }
+  .modal-overlay.show { opacity: 1; visibility: visible; }
+  .modal-box {
+    width: 100%; max-width: 380px;
+    padding: 28px;
+    text-align: center;
+    transform: translateY(10px);
+    transition: transform 0.2s ease;
+  }
+  .modal-overlay.show .modal-box { transform: translateY(0); }
+  .modal-message { font-size: 15px; font-weight: 600; line-height: 1.6; margin-bottom: 22px; }
+  .modal-actions { display: flex; gap: 12px; }
+  .modal-actions .btn { flex: 1; padding: 12px 18px; font-size: 14px; }
+
+  .demo-link {
+    all: unset; display: inline-block; margin-top: 22px;
+    font-size: 12px; font-weight: 600; color: var(--muted-dim);
+    border-bottom: 1px dashed var(--muted-dim);
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .demo-link:hover { color: var(--violet-soft); border-color: var(--violet-soft); }
+
+  /* ============================================================
+     JOIN VIEW
+     ============================================================ */
+  .join-card { padding: 32px; }
+
+  .error-banner {
+    display: none;
+    background: rgba(255,107,107,0.1);
+    border: 1px solid rgba(255,107,107,0.35);
+    color: var(--danger);
+    font-size: 13px; font-weight: 600;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 18px;
+  }
+  .error-banner.show { display: block; animation: shake 0.4s ease; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* ============================================================
+     WAITING CARDS (waiting room + waiting-for-results share look)
+     ============================================================ */
+  .waiting-card { padding: 44px 32px; text-align: center; }
+
+  /* --- Leaderboard (matches the Professor Dashboard's live leaderboard) --- */
+  .leaderboard-panel { padding: 26px; margin-top: 24px; }
+  .leaderboard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .leaderboard-head h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--mint); }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); animation: pulse-dot 1.4s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .leaderboard-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .lb-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 12px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+  }
+  .lb-rank {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+    background: rgba(255,255,255,0.06); color: var(--muted);
+    flex-shrink: 0;
+  }
+  .lb-row.rank-1 .lb-rank { background: linear-gradient(135deg, #FFD35C, #FFC93C); color: #3a2a00; }
+  .lb-row.rank-2 .lb-rank { background: linear-gradient(135deg, #E4E4F0, #C3C3D9); color: #2a2a3a; }
+  .lb-row.rank-3 .lb-rank { background: linear-gradient(135deg, #E0A96D, #C98A4B); color: #3a2200; }
+  .lb-name { flex: 1; font-size: 14px; font-weight: 600; }
+  .lb-score { font-size: 14px; font-weight: 800; color: var(--mint); font-variant-numeric: tabular-nums; }
+
+  .waiting-spinner { width: 100px; height: 100px; margin: 0 auto 26px; }
+  .waiting-spinner svg { width: 100%; height: 100%; animation: spin 1.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+  .spinner-arc { fill: none; stroke: url(#spinnerGradient); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 190; stroke-dashoffset: 140; }
+
+  .waiting-card h2 { font-size: 21px; font-weight: 700; margin-bottom: 10px; }
+  .waiting-sub { font-size: 14px; color: var(--muted); max-width: 380px; margin: 0 auto; line-height: 1.6; }
+
+  .waiting-info-grid {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    text-align: left;
+  }
+  .info-item .info-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .info-item .info-value { font-size: 18px; font-weight: 800; color: var(--ink); }
+  .info-item .info-value.mint { color: var(--mint); }
+
+  .status-text {
+    margin-top: 26px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--violet-soft);
+    min-height: 18px;
+  }
+  .status-text span { display: inline-block; animation: status-fade 0.4s ease; }
+  @keyframes status-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ============================================================
+     QUIZ VIEW
+     ============================================================ */
+  .quiz-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .quiz-progress-label { font-size: 14px; font-weight: 700; color: var(--muted); }
+  .quiz-progress-label span { color: var(--ink); }
+
+  .quiz-timer {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+  }
+  .quiz-timer.low-time { color: var(--danger); border-color: rgba(255,107,107,0.35); }
+
+  .quiz-progress-track { width: 100%; height: 6px; border-radius: 6px; background: rgba(255,255,255,0.06); overflow: hidden; margin-bottom: 22px; }
+  .quiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--mint)); border-radius: 6px; transition: width 0.3s ease; }
+
+  .q-nav-dots { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .q-nav-dot {
+    all: unset; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    border: 1.5px solid var(--card-border-hover);
+    color: var(--muted);
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  }
+  .q-nav-dot:hover { transform: translateY(-2px); }
+  .q-nav-dot.answered { background: rgba(0,229,160,0.14); border-color: var(--mint); color: var(--mint); }
+  .q-nav-dot.current { border-color: var(--violet); color: var(--ink); box-shadow: 0 0 0 3px rgba(124,77,255,0.25); }
+  .q-nav-dot.current.answered { box-shadow: 0 0 0 3px rgba(0,229,160,0.25); }
+
+  .quiz-question-card { padding: 30px; margin-bottom: 22px; }
+  .quiz-question-text { font-size: 19px; font-weight: 700; line-height: 1.5; margin-bottom: 24px; }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 12px; }
+  .quiz-option-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 16px;
+    background: rgba(255,255,255,0.025);
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+  }
+  .quiz-option-row:hover { border-color: var(--card-border-hover); transform: translateX(2px); }
+  .quiz-option-row.selected { border-color: var(--mint); background: rgba(0,229,160,0.07); }
+
+  .option-radio {
+    appearance: none; -webkit-appearance: none;
+    width: 20px; height: 20px; min-width: 20px;
+    border: 2px solid var(--card-border-hover);
+    border-radius: 50%;
+    position: relative;
+    transition: border-color 0.2s ease;
+  }
+  .option-radio:checked { border-color: var(--mint); }
+  .option-radio:checked::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--mint); }
+
+  .option-text { font-size: 15px; font-weight: 600; }
+
+  .quiz-options.locked .quiz-option-row { pointer-events: none; opacity: 0.6; }
+  .q-nav-dots.locked .q-nav-dot { pointer-events: none; opacity: 0.5; }
+
+  .quiz-nav-row { display: flex; gap: 12px; }
+  .quiz-nav-row .btn { flex: 1; }
+
+  /* ============================================================
+     RESULTS VIEW
+     ============================================================ */
+  .results-summary-card { padding: 30px; margin-bottom: 30px; }
+
+  .results-top-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .results-score-hero { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; justify-content: center; }
+
+  .score-circle { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+  .score-circle svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-ring-bg { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 10; }
+  .score-ring-fg { fill: none; stroke: url(#scoreGradient); stroke-width: 10; stroke-linecap: round; }
+  .score-circle .score-text {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800;
+  }
+
+  .score-breakdown { display: flex; flex-direction: column; gap: 12px; min-width: 200px; }
+  .score-stat { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .score-stat strong { color: var(--ink); margin-left: auto; font-size: 15px; }
+  .score-stat .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .score-stat .dot.correct { background: var(--mint); }
+  .score-stat .dot.wrong { background: var(--danger); }
+
+  .review-head { margin-bottom: 16px; }
+  .review-head h2 { font-size: 16px; font-weight: 700; }
+
+  .review-card {
+    padding: 20px 22px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--card-border);
+  }
+  .review-card.correct { border-left-color: var(--mint); }
+  .review-card.incorrect { border-left-color: var(--danger); }
+
+  .review-head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .review-q-num { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .review-indicator { font-size: 16px; font-weight: 800; }
+  .review-indicator.correct { color: var(--mint); }
+  .review-indicator.incorrect { color: var(--danger); }
+
+  .review-question-text { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .review-answer-row { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .review-answer-row .label { font-weight: 600; margin-right: 6px; }
+  .review-answer-row .value { color: var(--ink); }
+  .review-card.correct .review-answer-row.yours .value { color: var(--mint); }
+  .review-card.incorrect .review-answer-row.yours .value { color: var(--danger); }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 560px) {
+    .shell { padding: 24px 16px 90px; }
+    .topbar { padding: 12px 16px; }
+    .quiz-nav-row { flex-wrap: wrap; }
+    .quiz-nav-row .btn { flex: 1 1 100%; }
+    .results-score-hero { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP NAV
+       ============================================================ -->
+  <div class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="navRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7C4DFF"/>
+            <stop offset="100%" stop-color="#A78BFA"/>
+          </linearGradient>
+        </defs>
+        <path fill="none" stroke="url(#navRingGradient)" stroke-width="13" stroke-linecap="round"
+              d="M129.6,163.4 A70,70 0 1,1 169.7,106.1"/>
+        <g transform="translate(100,100) scale(0.8) translate(-100,-100) translate(0,6)">
+          <path fill="none" stroke="#A78BFA" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"
+                d="M76,70 L88,70 A12,12 0 0 0 112,70 L124,70 A6,6 0 0 1 130,76 L130,88 A12,12 0 0 0 130,112 L130,124 A6,6 0 0 1 124,130 L76,130 A6,6 0 0 1 70,124 L70,76 A6,6 0 0 1 76,70 Z"/>
+        </g>
+        <polyline fill="none" stroke="#00E5A0" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"
+                   points="130,163 150,182 190,120"/>
+      </svg>
+      <div class="brand-name">QUIZ<span>ORA</span></div>
+    </div>
+
+    <div class="role-pill">
+      <svg class="mini-avatar" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="50" fill="#00E5A0"/>
+        <circle cx="50" cy="38" r="15" fill="#fff"/>
+        <path d="M18,96 C18,68 34,58 50,58 C66,58 82,68 82,96 Z" fill="#fff"/>
+        <path d="M38,58 Q50,72 62,58" stroke="#00E5A0" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M30,60 L70,96" stroke="#00E5A0" stroke-width="5" stroke-linecap="round"/>
+        <rect x="61" y="81" width="13" height="11" rx="2" fill="#00E5A0"/>
+      </svg>
+      <span>Signed in as <strong>Student</strong></span>
+    </div>
+  </div>
+
+  <div class="shell">
+
+    <!-- ============================================================
+         1. JOIN VIEW
+         ============================================================ -->
+    <div class="view active" id="joinView">
+      <div class="page-head">
+        <div class="eyebrow">Join a quiz</div>
+        <h1>Enter your details to begin</h1>
+        <p>Ask your professor for the quiz code, then join when you're ready.</p>
+      </div>
+
+      <div class="panel join-card">
+        <div class="error-banner" id="joinError">Invalid quiz code. Please check with your professor and try again.</div>
+
+        <div class="field">
+          <label for="studentName">Student name</label>
+          <input type="text" id="studentName" placeholder="e.g. Ananya Rao">
+        </div>
+        <div class="field">
+          <label for="rollNumber">Roll / registration number</label>
+          <input type="text" id="rollNumber" placeholder="e.g. 21CS045">
+        </div>
+        <div class="field">
+          <label for="quizCodeInput">Quiz code</label>
+          <input type="text" id="quizCodeInput" placeholder="Enter the code provided by your professor">
+        </div>
+
+        <button class="btn btn-primary btn-large" id="joinTestBtn" type="button">Join Test</button>
+        <button class="demo-link" id="demoInvalidCodeBtn" type="button">(Demo) Preview invalid-code message</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         2. WAITING ROOM
+         ============================================================ -->
+    <div class="view" id="waitingRoomView">
+      <div class="panel waiting-card">
+        <div class="waiting-spinner">
+          <svg viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="spinnerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7C4DFF"/>
+                <stop offset="100%" stop-color="#00E5A0"/>
+              </linearGradient>
+            </defs>
+            <circle class="spinner-track" cx="50" cy="50" r="38"/>
+            <circle class="spinner-arc" cx="50" cy="50" r="38"/>
+          </svg>
+        </div>
+        <h2>Waiting for the Professor to Start the Quiz</h2>
+        <p class="waiting-sub">Sit tight — the quiz will begin automatically the moment your professor starts it. No need to refresh.</p>
+
+        <div class="waiting-info-grid">
+          <div class="info-item"><div class="info-label">Quiz</div><div class="info-value" id="wrQuizName">—</div></div>
+          <div class="info-item"><div class="info-label">Subject</div><div class="info-value" id="wrSubject">—</div></div>
+          <div class="info-item"><div class="info-label">Professor</div><div class="info-value" id="wrProfessor">—</div></div>
+          <div class="info-item"><div class="info-label">Students joined</div><div class="info-value mint" id="wrStudentsJoined">1</div></div>
+        </div>
+
+        <button class="demo-link" id="demoStartTestBtn" type="button">(Demo) Start test now →</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         3. QUIZ VIEW
+         ============================================================ -->
+    <div class="view" id="quizView">
+      <div class="quiz-topbar">
+        <div class="quiz-progress-label">Question <span id="qCurrentNum">1</span> of <span id="qTotalNum">10</span></div>
+        <div class="quiz-timer" id="quizTimerBox"><span id="quizTimerText">10:00</span></div>
+      </div>
+      <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
+
+      <div class="q-nav-dots" id="qNavDots"><!-- generated by JS --></div>
+
+      <div class="panel quiz-question-card">
+        <div class="quiz-question-text" id="quizQuestionText">Loading question…</div>
+        <div class="quiz-options" id="quizOptionsList"><!-- generated by JS --></div>
+      </div>
+
+      <div class="quiz-nav-row">
+        <button class="btn btn-secondary" id="prevBtn" type="button">◀ Previous</button>
+        <button class="btn btn-outline-danger" id="submitQuizBtn" type="button">Finish Test</button>
+        <button class="btn btn-primary" id="nextBtn" type="button">Next ▶</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         4. WAITING SCREEN (shown after Finish Test or auto-submit at timeout)
+         ============================================================ -->
+    <div class="view" id="submittedWaitingView">
+      <div class="panel waiting-card">
+        <div class="waiting-spinner">
+          <svg viewBox="0 0 100 100">
+            <circle class="spinner-track" cx="50" cy="50" r="38"/>
+            <circle class="spinner-arc" cx="50" cy="50" r="38"/>
+          </svg>
+        </div>
+
+        <h2>Test Completed</h2>
+        <p class="waiting-sub">
+          You have successfully completed the test.<br>
+          Please wait while your peers finish their submissions.<br>
+          Your results will be available once the professor officially ends the quiz.
+        </p>
+
+        <div class="status-text" id="waitingStatusText">Waiting for your peers to finish&hellip;</div>
+
+        <button class="demo-link" id="demoEndTestBtn" type="button">(Demo) Professor ends test →</button>
+      </div>
+
+      <div class="panel leaderboard-panel">
+        <div class="leaderboard-head">
+          <h2>Live leaderboard</h2>
+          <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+        </div>
+        <div class="leaderboard-list" id="waitingLeaderboardList"><!-- generated by JS --></div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         5. RESULTS VIEW
+         ============================================================ -->
+    <div class="view" id="resultsView">
+      <div class="page-head">
+        <div class="eyebrow">Results</div>
+        <h1>Quiz results</h1>
+      </div>
+
+      <div class="panel results-summary-card">
+        <div class="results-top-grid">
+          <div class="info-item"><div class="info-label">Student</div><div class="info-value" id="resStudentName">—</div></div>
+          <div class="info-item"><div class="info-label">Quiz</div><div class="info-value" id="resQuizName">—</div></div>
+          <div class="info-item"><div class="info-label">Subject</div><div class="info-value" id="resSubject">—</div></div>
+          <div class="info-item"><div class="info-label">Rank</div><div class="info-value" id="resRank">—</div></div>
+        </div>
+
+        <div class="results-score-hero">
+          <div class="score-circle">
+            <svg viewBox="0 0 140 140">
+              <defs>
+                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7C4DFF"/>
+                  <stop offset="100%" stop-color="#00E5A0"/>
+                </linearGradient>
+              </defs>
+              <circle class="score-ring-bg" cx="70" cy="70" r="60"/>
+              <circle class="score-ring-fg" id="scoreRing" cx="70" cy="70" r="60"/>
+            </svg>
+            <div class="score-text"><span id="resPercentage">0%</span></div>
+          </div>
+
+          <div class="score-breakdown">
+            <div class="score-stat"><span class="dot correct"></span>Correct answers <strong id="resCorrectCount">0</strong></div>
+            <div class="score-stat"><span class="dot wrong"></span>Wrong answers <strong id="resWrongCount">0</strong></div>
+            <div class="score-stat">Total marks <strong id="resTotalMarks">0</strong></div>
+            <div class="score-stat">Time taken <strong id="resTimeTaken">—</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-head"><h2>Answer review</h2></div>
+      <div id="reviewList"><!-- generated by JS --></div>
+    </div>
+
+  </div>
+
+  <!-- Custom confirm modal — replaces window.confirm(), which browsers can
+       silently block inside sandboxed preview frames (e.g. this chat's
+       artifact preview), making buttons that rely on it appear to do nothing. -->
+  <div class="modal-overlay" id="confirmModalOverlay">
+    <div class="panel modal-box">
+      <p class="modal-message" id="confirmModalMessage"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="confirmModalCancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="confirmModalConfirm" type="button">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =====================================================================
+   QUIZORA — Student Dashboard (frontend only)
+   No backend calls, no real score calculation, no real timer sync.
+   Everywhere the server needs to plug in is marked with // BACKEND:
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   Placeholder / sample data — replace with real API responses
+   --------------------------------------------------------------------- */
+// BACKEND: these values represent what the server would return after
+// validating the quiz code. Nothing here is derived from or compared
+// against the code the student types — the frontend does not assume
+// or require any specific code value or format.
+const SAMPLE_SUBJECT_NAME = 'Data Structures';
+const SAMPLE_QUIZ_NAME = 'Unit 3 — Data Structures';
+const SAMPLE_PROFESSOR_NAME = 'Dr. Aditi Sharma';
+
+// BACKEND: total quiz duration and the student's *remaining* time at join
+// (this demo simulates a student joining 5 minutes late out of a 10-minute quiz —
+// the timer should never reset to the full duration on join).
+const TOTAL_DURATION_SECONDS = 10 * 60;
+const REMAINING_AT_JOIN_SECONDS = 5 * 60;
+
+// BACKEND: replace with the real question set fetched using the quiz code
+const SAMPLE_QUESTIONS = [
+  { text: 'What is the capital of France?', options: ['Paris', 'Rome', 'Madrid', 'Berlin'] },
+  { text: 'What is 12 × 8?', options: ['96', '86', '106', '88', '90'] },
+  { text: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter'] },
+  { text: 'What is the boiling point of water at sea level (°C)?', options: ['90', '100', '110', '120'] },
+  { text: 'Which gas do plants primarily absorb for photosynthesis?', options: ['Oxygen', 'Nitrogen', 'Carbon dioxide', 'Helium'] },
+  { text: 'How many continents are there on Earth?', options: ['5', '6', '7', '8'] },
+  { text: 'What is the square root of 144?', options: ['10', '11', '12', '14'] },
+  { text: 'Which ocean is the largest?', options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'] },
+  { text: 'What is the chemical symbol for gold?', options: ['Ag', 'Au', 'Gd', 'Go'] },
+  { text: 'Which of these is not a primary color (traditional RYB)?', options: ['Red', 'Blue', 'Green', 'Yellow'] },
+];
+
+// BACKEND: replace with real grading from the server — used here only to
+// render the review screen with something meaningful in this demo.
+const SAMPLE_CORRECT_ANSWERS = [0, 0, 1, 1, 2, 2, 2, 3, 1, 2];
+
+// BACKEND: replace with live data — e.g. poll an endpoint every few seconds
+// and call renderWaitingLeaderboard(data) again as more students submit.
+// Same shape and same demo class as the Professor Dashboard's leaderboard.
+const SAMPLE_LEADERBOARD = [
+  { name: 'Ananya Rao',   score: 9 },
+  { name: 'Karthik Iyer', score: 8 },
+  { name: 'Priya Menon',  score: 8 },
+  { name: 'Rohan Das',    score: 6 },
+  { name: 'Sneha Pillai', score: 5 },
+];
+
+function renderWaitingLeaderboard(data) {
+  const sorted = [...data].sort((a, b) => b.score - a.score);
+  const list = document.getElementById('waitingLeaderboardList');
+  list.innerHTML = '';
+
+  sorted.forEach((entry, i) => {
+    const rank = i + 1;
+    const row = document.createElement('div');
+    row.className = `lb-row${rank <= 3 ? ' rank-' + rank : ''}`;
+    row.innerHTML = `
+      <div class="lb-rank">${rank}</div>
+      <div class="lb-name">${escapeHtml(entry.name)}</div>
+      <div class="lb-score">${entry.score} pts</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+const studentAnswers = new Array(SAMPLE_QUESTIONS.length).fill(null);
+let currentQuestionIndex = 0;
+let studentDisplayName = '';
+
+/* ---------------------------------------------------------------------
+   View switching
+   --------------------------------------------------------------------- */
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ---------------------------------------------------------------------
+   1. Join flow
+   --------------------------------------------------------------------- */
+const quizCodeInput = document.getElementById('quizCodeInput');
+const joinError = document.getElementById('joinError');
+
+document.getElementById('joinTestBtn').addEventListener('click', () => {
+  const nameInput = document.getElementById('studentName');
+  const rollInput = document.getElementById('rollNumber');
+
+  const name = nameInput.value.trim();
+  const roll = rollInput.value.trim();
+  const code = quizCodeInput.value.trim();
+
+  nameInput.classList.toggle('field-error', !name);
+  rollInput.classList.toggle('field-error', !roll);
+  quizCodeInput.classList.toggle('field-error', !code);
+  if (!name || !roll || !code) return;
+
+  joinError.classList.remove('show');
+  quizCodeInput.classList.remove('field-error');
+  studentDisplayName = name;
+
+  // BACKEND: send { name, roll, code } to the server here and validate the
+  // code for real. On success the server should return the quiz name,
+  // subject, and professor name for display in the waiting room below.
+  // On failure, call showInvalidCodeError() instead of proceeding.
+  //
+  // fetch('/api/join', { method: 'POST', body: JSON.stringify({ name, roll, code }) })
+  //   .then(res => res.json())
+  //   .then(data => data.valid ? enterWaitingRoom(data) : showInvalidCodeError());
+
+  enterWaitingRoom({
+    quizName: SAMPLE_QUIZ_NAME,
+    subject: SAMPLE_SUBJECT_NAME,
+    professorName: SAMPLE_PROFESSOR_NAME,
+  });
+});
+
+function enterWaitingRoom(data) {
+  document.getElementById('wrQuizName').textContent = data.quizName;
+  document.getElementById('wrSubject').textContent = data.subject;
+  document.getElementById('wrProfessor').textContent = data.professorName;
+
+  showView('waitingRoomView');
+  startStudentsJoinedSimulation();
+}
+
+function showInvalidCodeError() {
+  joinError.classList.remove('show');
+  void joinError.offsetWidth; // restart the shake animation
+  joinError.classList.add('show');
+  quizCodeInput.classList.add('field-error');
+}
+
+// Demo-only: previews the error state on request. Not tied to any specific
+// code value — real validation happens on the backend.
+document.getElementById('demoInvalidCodeBtn').addEventListener('click', showInvalidCodeError);
+
+/* ---------------------------------------------------------------------
+   2. Waiting room
+   --------------------------------------------------------------------- */
+let studentsJoinedInterval = null;
+
+function startStudentsJoinedSimulation() {
+  // BACKEND: replace with a real live count (poll or websocket)
+  let count = 1;
+  const el = document.getElementById('wrStudentsJoined');
+  el.textContent = count;
+  clearInterval(studentsJoinedInterval);
+  studentsJoinedInterval = setInterval(() => {
+    count += Math.ceil(Math.random() * 3);
+    if (count > 38) count = 38;
+    el.textContent = count;
+  }, 2200);
+}
+
+document.getElementById('demoStartTestBtn').addEventListener('click', () => {
+  // BACKEND: in production this transition is triggered by the server
+  // (e.g. websocket event) the instant the professor starts the quiz.
+  clearInterval(studentsJoinedInterval);
+  beginQuiz();
+});
+
+/* ---------------------------------------------------------------------
+   3. Quiz view
+   --------------------------------------------------------------------- */
+const qNavDots       = document.getElementById('qNavDots');
+const quizOptionsList= document.getElementById('quizOptionsList');
+const quizQuestionText = document.getElementById('quizQuestionText');
+const prevBtn         = document.getElementById('prevBtn');
+const nextBtn         = document.getElementById('nextBtn');
+
+function beginQuiz() {
+  document.getElementById('qTotalNum').textContent = SAMPLE_QUESTIONS.length;
+  buildNavDots();
+  currentQuestionIndex = 0;
+  renderQuestion();
+  showView('quizView');
+  startTimer(REMAINING_AT_JOIN_SECONDS);
+}
+
+function buildNavDots() {
+  qNavDots.innerHTML = '';
+  SAMPLE_QUESTIONS.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'q-nav-dot';
+    dot.textContent = i + 1;
+    dot.addEventListener('click', () => {
+      currentQuestionIndex = i;
+      renderQuestion();
+    });
+    qNavDots.appendChild(dot);
+  });
+}
+
+function renderQuestion() {
+  const q = SAMPLE_QUESTIONS[currentQuestionIndex];
+  document.getElementById('qCurrentNum').textContent = currentQuestionIndex + 1;
+  quizQuestionText.textContent = q.text;
+
+  quizOptionsList.innerHTML = '';
+  q.options.forEach((optionText, i) => {
+    const row = document.createElement('label');
+    row.className = 'quiz-option-row' + (studentAnswers[currentQuestionIndex] === i ? ' selected' : '');
+    row.innerHTML = `
+      <input type="radio" class="option-radio" name="currentQuestionOption" ${studentAnswers[currentQuestionIndex] === i ? 'checked' : ''}>
+      <span class="option-text">${escapeHtml(optionText)}</span>
+    `;
+    row.querySelector('.option-radio').addEventListener('change', () => {
+      studentAnswers[currentQuestionIndex] = i;
+      renderQuestion();
+      updateNavDots();
+    });
+    quizOptionsList.appendChild(row);
+  });
+
+  prevBtn.disabled = currentQuestionIndex === 0;
+  nextBtn.disabled = currentQuestionIndex === SAMPLE_QUESTIONS.length - 1;
+
+  const progress = ((currentQuestionIndex + 1) / SAMPLE_QUESTIONS.length) * 100;
+  document.getElementById('quizProgressFill').style.width = progress + '%';
+
+  updateNavDots();
+}
+
+function updateNavDots() {
+  const dots = qNavDots.querySelectorAll('.q-nav-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('answered', studentAnswers[i] !== null);
+    dot.classList.toggle('current', i === currentQuestionIndex);
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+prevBtn.addEventListener('click', () => {
+  if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(); }
+});
+nextBtn.addEventListener('click', () => {
+  if (currentQuestionIndex < SAMPLE_QUESTIONS.length - 1) { currentQuestionIndex++; renderQuestion(); }
+});
+
+document.getElementById('submitQuizBtn').addEventListener('click', () => {
+  showConfirmModal('Finish the test now? You won\'t be able to change your answers afterward.', () => {
+    submitQuiz('manual');
+  });
+});
+
+/* ---------------------------------------------------------------------
+   Custom confirm modal (replaces window.confirm — see comment in HTML)
+   --------------------------------------------------------------------- */
+function showConfirmModal(message, onConfirm) {
+  const overlay = document.getElementById('confirmModalOverlay');
+  const confirmBtn = document.getElementById('confirmModalConfirm');
+  const cancelBtn = document.getElementById('confirmModalCancel');
+
+  document.getElementById('confirmModalMessage').textContent = message;
+  overlay.classList.add('show');
+
+  function cleanup() {
+    overlay.classList.remove('show');
+    confirmBtn.removeEventListener('click', handleConfirm);
+    cancelBtn.removeEventListener('click', handleCancel);
+  }
+  function handleConfirm() { cleanup(); onConfirm(); }
+  function handleCancel() { cleanup(); }
+
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', handleCancel);
+}
+
+function lockQuiz() {
+  quizOptionsList.classList.add('locked');
+  qNavDots.classList.add('locked');
+  document.querySelectorAll('.option-radio').forEach(r => r.disabled = true);
+  prevBtn.disabled = true;
+  nextBtn.disabled = true;
+  document.getElementById('submitQuizBtn').disabled = true;
+}
+
+let timeUsedSeconds = 0;
+let statusTextInterval = null;
+
+// The exact phrases students should see, in order, while they wait.
+const WAITING_STATUS_MESSAGES = [
+  'Waiting for the professor to end the test…',
+  'Processing submissions…',
+  'Fetching results…',
+];
+
+function submitQuiz(reason) {
+  lockQuiz();
+  // BACKEND: send { code, roll, answers: studentAnswers, reason } to the
+  // server here. `reason` is 'manual' (Finish Test) or 'auto' (timer expired).
+  timeUsedSeconds = TOTAL_DURATION_SECONDS - secondsLeft;
+
+  showView('submittedWaitingView');
+  startWaitingStatusRotation();
+  renderWaitingLeaderboard(SAMPLE_LEADERBOARD);
+}
+
+function startWaitingStatusRotation() {
+  const statusEl = document.getElementById('waitingStatusText');
+  let i = 0;
+  statusEl.innerHTML = `<span>${WAITING_STATUS_MESSAGES[0]}</span>`;
+
+  clearInterval(statusTextInterval);
+  statusTextInterval = setInterval(() => {
+    i = (i + 1) % WAITING_STATUS_MESSAGES.length;
+    statusEl.innerHTML = `<span>${WAITING_STATUS_MESSAGES[i]}</span>`;
+  }, 2200);
+  // BACKEND: once the server actually notifies that the quiz has ended,
+  // call clearInterval(statusTextInterval) and then showResults() —
+  // exactly what the demo button below does for now.
+}
+
+document.getElementById('demoEndTestBtn').addEventListener('click', () => {
+  // BACKEND: in production, the results view appears when the server
+  // signals that the professor has ended the quiz — replace this click
+  // handler with that real event/notification.
+  clearInterval(statusTextInterval);
+  stopTimer();
+  showResults();
+});
+
+/* ---------------------------------------------------------------------
+   Timer — drives the quiz view and triggers auto-submit at zero.
+   Not displayed on the waiting screen per the current spec, but it keeps
+   running in the background so auto-submit still fires correctly.
+   --------------------------------------------------------------------- */
+let timerInterval = null;
+let secondsLeft = 0;
+
+function startTimer(seconds) {
+  stopTimer();
+  secondsLeft = seconds;
+  updateTimerDisplays();
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    if (secondsLeft <= 0) {
+      secondsLeft = 0;
+      updateTimerDisplays();
+      stopTimer();
+      // Auto-submit only if the student hasn't already submitted manually
+      if (document.getElementById('quizView').classList.contains('active')) {
+        submitQuiz('auto');
+      }
+      return;
+    }
+    updateTimerDisplays();
+  }, 1000);
+}
+
+function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+
+function updateTimerDisplays() {
+  const m = Math.floor(secondsLeft / 60);
+  const s = secondsLeft % 60;
+  const text = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+
+  const quizTimerText = document.getElementById('quizTimerText');
+  const quizTimerBox = document.getElementById('quizTimerBox');
+
+  quizTimerText.textContent = text;
+  quizTimerBox.classList.toggle('low-time', secondsLeft <= 30);
+}
+
+
+/* ---------------------------------------------------------------------
+   5. Results
+   --------------------------------------------------------------------- */
+function showResults() {
+  const total = SAMPLE_QUESTIONS.length;
+  let correct = 0;
+  studentAnswers.forEach((ans, i) => { if (ans === SAMPLE_CORRECT_ANSWERS[i]) correct++; });
+  const wrong = total - correct;
+  const percentage = Math.round((correct / total) * 100);
+
+  document.getElementById('resStudentName').textContent = studentDisplayName || '—';
+  document.getElementById('resQuizName').textContent = SAMPLE_QUIZ_NAME;
+  document.getElementById('resSubject').textContent = SAMPLE_SUBJECT_NAME;
+  document.getElementById('resRank').textContent = '3rd of 38'; // BACKEND: replace with real rank
+  document.getElementById('resCorrectCount').textContent = correct;
+  document.getElementById('resWrongCount').textContent = wrong;
+  document.getElementById('resTotalMarks').textContent = `${correct} / ${total}`;
+  document.getElementById('resPercentage').textContent = percentage + '%';
+
+  const mm = String(Math.floor(timeUsedSeconds / 60)).padStart(2, '0');
+  const ss = String(timeUsedSeconds % 60).padStart(2, '0');
+  document.getElementById('resTimeTaken').textContent = `${mm}:${ss}`;
+
+  const ring = document.getElementById('scoreRing');
+  const radius = 60;
+  const circ = 2 * Math.PI * radius;
+  ring.style.strokeDasharray = circ;
+  ring.style.strokeDashoffset = circ * (1 - percentage / 100);
+
+  const reviewList = document.getElementById('reviewList');
+  reviewList.innerHTML = '';
+  SAMPLE_QUESTIONS.forEach((q, i) => {
+    const yourIndex = studentAnswers[i];
+    const correctIndex = SAMPLE_CORRECT_ANSWERS[i];
+    const isCorrect = yourIndex === correctIndex;
+    const yourAnswerText = yourIndex === null ? 'No answer selected' : q.options[yourIndex];
+
+    const card = document.createElement('div');
+    card.className = 'panel review-card ' + (isCorrect ? 'correct' : 'incorrect');
+    card.innerHTML = `
+      <div class="review-head-row">
+        <span class="review-q-num">Question ${i + 1}</span>
+        <span class="review-indicator ${isCorrect ? 'correct' : 'incorrect'}">${isCorrect ? '✔ Correct' : '✘ Incorrect'}</span>
+      </div>
+      <div class="review-question-text">${escapeHtml(q.text)}</div>
+      <div class="review-answer-row yours"><span class="label">Your answer:</span><span class="value">${escapeHtml(yourAnswerText)}</span></div>
+      <div class="review-answer-row"><span class="label">Correct answer:</span><span class="value">${escapeHtml(q.options[correctIndex])}</span></div>
+    `;
+    reviewList.appendChild(card);
+  });
+
+  showView('resultsView');
+}
+</script>
+
+</body>
+</html>

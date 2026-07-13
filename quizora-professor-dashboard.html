@@ -385,6 +385,31 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); }
 
+  /* Custom confirm modal — replaces window.confirm(), which browsers can
+     silently block inside sandboxed preview frames, making buttons that
+     rely on it appear to do nothing. */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(5,6,20,0.6);
+    backdrop-filter: blur(3px);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    padding: 20px;
+  }
+  .modal-overlay.show { opacity: 1; visibility: visible; }
+  .modal-box {
+    width: 100%; max-width: 380px;
+    padding: 28px;
+    text-align: center;
+    transform: translateY(10px);
+    transition: transform 0.2s ease;
+  }
+  .modal-overlay.show .modal-box { transform: translateY(0); }
+  .modal-message { font-size: 15px; font-weight: 600; line-height: 1.6; margin-bottom: 22px; }
+  .modal-actions { display: flex; gap: 12px; }
+  .modal-actions .btn { flex: 1; padding: 12px 18px; font-size: 14px; }
+
   /* ============================================================
      LIVE MONITORING VIEW
      ============================================================ */
@@ -769,6 +794,16 @@
 
   <div class="toast" id="toast"><span class="dot"></span><span id="toastText">Saved</span></div>
 
+  <div class="modal-overlay" id="confirmModalOverlay">
+    <div class="panel modal-box">
+      <p class="modal-message" id="confirmModalMessage"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="confirmModalCancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="confirmModalConfirm" type="button">Confirm</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* =====================================================================
    QUIZORA — Professor Dashboard (frontend only)
@@ -995,11 +1030,11 @@ document.getElementById('saveChangesBtn').addEventListener('click', () => {
 });
 
 document.getElementById('clearAllBtn').addEventListener('click', () => {
-  const ok = confirm('Clear all questions? This cannot be undone.');
-  if (!ok) return;
-  questionsContainer.innerHTML = '';
-  createQuestionCard();
-  showToast('All questions cleared');
+  showConfirmModal('Clear all questions? This cannot be undone.', () => {
+    questionsContainer.innerHTML = '';
+    createQuestionCard();
+    showToast('All questions cleared');
+  });
 });
 
 function showToast(message) {
@@ -1165,12 +1200,36 @@ pauseTestBtn.addEventListener('click', () => {
 });
 
 completeTestBtn.addEventListener('click', () => {
-  const ok = confirm('Mark this test as complete? Students will no longer be able to submit.');
-  if (!ok) return;
-  endQuiz();
-  timerSub.textContent = 'Test completed by the professor.';
-  // BACKEND: notify the server to close submissions immediately
+  showConfirmModal('Mark this test as complete? Students will no longer be able to submit.', () => {
+    endQuiz();
+    timerSub.textContent = 'Test completed by the professor.';
+    // BACKEND: notify the server to close submissions immediately
+  });
 });
+
+/* ---------------------------------------------------------------------
+   Custom confirm modal (replaces window.confirm, which can be silently
+   blocked in sandboxed preview frames)
+   --------------------------------------------------------------------- */
+function showConfirmModal(message, onConfirm) {
+  const overlay = document.getElementById('confirmModalOverlay');
+  const confirmBtn = document.getElementById('confirmModalConfirm');
+  const cancelBtn = document.getElementById('confirmModalCancel');
+
+  document.getElementById('confirmModalMessage').textContent = message;
+  overlay.classList.add('show');
+
+  function cleanup() {
+    overlay.classList.remove('show');
+    confirmBtn.removeEventListener('click', handleConfirm);
+    cancelBtn.removeEventListener('click', handleCancel);
+  }
+  function handleConfirm() { cleanup(); onConfirm(); }
+  function handleCancel() { cleanup(); }
+
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', handleCancel);
+}
 
 function endQuiz() {
   stopTimer();
