@@ -467,11 +467,11 @@
       <div class="page-head">
         <div class="eyebrow">Join a quiz</div>
         <h1>Enter your details to begin</h1>
-        <p>Ask your professor for the quiz code, then join when you're ready.</p>
+        <p>Ask your professor for the class code, then join when you're ready.</p>
       </div>
 
       <div class="panel join-card">
-        <div class="error-banner" id="joinError">Invalid quiz code. Please check with your professor and try again.</div>
+        <div class="error-banner" id="joinError">Invalid class code. Please check with your professor and try again.</div>
 
         <div class="field">
           <label for="studentName">Student name</label>
@@ -482,7 +482,7 @@
           <input type="text" id="rollNumber" placeholder="e.g. 21CS045">
         </div>
         <div class="field">
-          <label for="quizCodeInput">Quiz code</label>
+          <label for="quizCodeInput">Class code</label>
           <input type="text" id="quizCodeInput" placeholder="Enter the code provided by your professor">
         </div>
 
@@ -650,7 +650,7 @@
    Placeholder / sample data — replace with real API responses
    --------------------------------------------------------------------- */
 // BACKEND: these values represent what the server would return after
-// validating the quiz code. Nothing here is derived from or compared
+// validating the class code. Nothing here is derived from or compared
 // against the code the student types — the frontend does not assume
 // or require any specific code value or format.
 const SAMPLE_SUBJECT_NAME = 'Data Structures';
@@ -663,7 +663,7 @@ const SAMPLE_PROFESSOR_NAME = 'Dr. Aditi Sharma';
 const TOTAL_DURATION_SECONDS = 10 * 60;
 const REMAINING_AT_JOIN_SECONDS = 5 * 60;
 
-// BACKEND: replace with the real question set fetched using the quiz code
+// BACKEND: replace with the real question set fetched using the class code
 const SAMPLE_QUESTIONS = [
   { text: 'What is the capital of France?', options: ['Paris', 'Rome', 'Madrid', 'Berlin'] },
   { text: 'What is 12 × 8?', options: ['96', '86', '106', '88', '90'] },
